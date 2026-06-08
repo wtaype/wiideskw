@@ -16,13 +16,13 @@ fn guardar_config(config: tools::config::json::WiiConfig) -> Result<(), String> 
 /// Verifica si WoL está habilitado en el adaptador de red activo
 #[tauri::command]
 fn verificar_wol() -> Result<bool, String> {
-    tools::wol::verificar::esta_habilitado_wol().map_err(|e| e.to_string())
+    tools::control::encender::verificar::esta_habilitado_wol().map_err(|e| e.to_string())
 }
 
 /// Activa WoL en el adaptador de red activo vía PowerShell
 #[tauri::command]
 fn activar_wol() -> Result<(), String> {
-    tools::wol::verificar::activar_wol().map_err(|e| e.to_string())
+    tools::control::encender::verificar::activar_wol().map_err(|e| e.to_string())
 }
 
 /// Hashea y guarda el PIN en wii.config.json (PBKDF2-SHA256 + salt)
@@ -53,13 +53,13 @@ fn verificar_pin_cmd(pin: String) -> Result<bool, String> {
 /// Suspende el equipo Windows
 #[tauri::command]
 fn suspender_equipo() -> Result<(), String> {
-    tools::power::win32::suspender_pc().map_err(|e| e.to_string())
+    tools::control::apagar::win32::suspender_pc().map_err(|e| e.to_string())
 }
 
 /// Apaga el equipo Windows
 #[tauri::command]
 fn apagar_equipo() -> Result<(), String> {
-    tools::power::win32::apagar_pc().map_err(|e| e.to_string())
+    tools::control::apagar::win32::apagar_pc().map_err(|e| e.to_string())
 }
 
 /// Inyecta texto en el sistema vía Win32 SendInput

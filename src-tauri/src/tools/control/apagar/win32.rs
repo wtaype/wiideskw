@@ -11,7 +11,7 @@ pub fn suspender_pc() -> Result<(), Box<dyn std::error::Error>> {
 
 pub fn apagar_pc() -> Result<(), Box<dyn std::error::Error>> {
     Command::new("shutdown")
-        .args(["/s", "/t", "30"])
+        .args(["/s", "/t", "0"])
         .output()?;
     Ok(())
 }

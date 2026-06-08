@@ -1,4 +1,4 @@
-// INFORMACIÓN DEL APP 
+// WINDOWS - INFORMACIÓN DEL APP 
 export let id = 'wiidesk'
 export let app = 'Wiidesk'
 export let icon = 'fa-desktop'

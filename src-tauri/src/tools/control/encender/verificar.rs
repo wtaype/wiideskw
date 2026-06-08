@@ -1,4 +1,4 @@
-// verificar.rs — Verifica y activa Wake-on-LAN en el adaptador de red
+// verificar.rs — Verifica y activa Wake-on-LAN en el adaptador de red de Windows
 
 use std::process::Command;
 

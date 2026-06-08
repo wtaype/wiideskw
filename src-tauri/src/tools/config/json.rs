@@ -22,14 +22,14 @@ pub struct WiiConfig {
 }
 
 pub fn cargar_configuracion() -> Result<WiiConfig, Box<dyn std::error::Error>> {
-    let mut archivo = File::open(".env")?;
+    let mut archivo = File::open(".env.json")?;
     let mut contenido = String::new();
     archivo.read_to_string(&mut contenido)?;
     Ok(serde_json::from_str(&contenido)?)
 }
 
 pub fn guardar_configuracion(config: &WiiConfig) -> Result<(), Box<dyn std::error::Error>> {
-    let mut archivo = File::create(".env")?;
+    let mut archivo = File::create(".env.json")?;
     let contenido = serde_json::to_string_pretty(config)?;
     archivo.write_all(contenido.as_bytes())?;
     Ok(())
