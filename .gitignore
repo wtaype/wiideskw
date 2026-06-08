@@ -7,12 +7,16 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
-*.local
+build/
+out/
+
+# Environment files
 .env
-.env.*
+.env.local
 .env.*.local
 
 # Editor directories and files
@@ -26,5 +30,26 @@ dist-ssr
 *.sln
 *.sw?
 
-# Tauri
+# Test and coverage
+coverage/
+.nyc_output
+reports/
+
+# System files
+Thumbs.db
+ehthumbs.db
+.Spotlight-V100
+.Trashes
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*.lock
+
+# Más archivos
+.agents
+skills-lock.json
+
+# Tauri/Rust
 src-tauri/target/

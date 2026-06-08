@@ -1,7 +1,7 @@
 {
-  "productName": "WiiDesk",
+  "productName": "Wiidesk",
   "version": "1.0.0",
-  "identifier": "com.wiidesk.windows",
+  "identifier": "com.wiidesk.app",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
@@ -11,23 +11,25 @@
   "app": {
     "windows": [
       {
-        "title": "WiiDesk — Control Remoto LAN",
-        "width": 1280,
-        "height": 800,
-        "minWidth": 900,
-        "minHeight": 600,
+        "title": "Wiidesk",
+        "width": 1900,
+        "height": 1000,
         "resizable": true,
-        "fullscreen": false,
-        "decorations": true
+        "decorations": true,
+        "alwaysOnTop": false,
+        "center": false,
+        "x": 0,
+        "y": 0
       }
     ],
-    "security": {
-      "csp": null
-    }
+    "security": { "csp": null }
   },
   "bundle": {
     "active": true,
-    "targets": "all",
-    "icon": ["icons/icon.png", "icons/icon.ico"]
+    "targets": "nsis",
+    "icon": ["icons/icon.ico"],
+    "windows": {
+      "wix": {}
+    }
   }
 }

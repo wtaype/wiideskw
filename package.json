@@ -1,19 +1,29 @@
 {
   "name": "wiidesk-windows",
-  "private": true,
   "version": "1.0.0",
-  "type": "module",
+  "description": "",
+  "main": "index.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "tauri": "tauri"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.5.2",
+      "onFail": "download"
+    }
+  },
+  "type": "module",
+  "devDependencies": {
+    "vite": "^8.0.16"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.11.0",
-    "qrcode": "^1.5.3"
-  },
-  "devDependencies": {
-    "@tauri-apps/cli": "^2.11.2",
-    "vite": "^5.4.0"
+    "firebase": "^12.14.0",
+    "qrcode": "^1.5.4"
   }
 }

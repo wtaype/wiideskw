@@ -1,0 +1,254 @@
+/* =========================================================================
+   GESTOR.CSS — Panel de Control y Bienvenida
+   ========================================================================= */
+
+.ges_container {
+  display: flex;
+  flex-direction: column;
+  gap: 4vh;
+  width: 100%;
+  min-height: calc(100vh - 80px);
+  padding: 2vh 0 6vh;
+}
+
+/* Hero Panel premium con degradados */
+.ges_hero {
+  background: var(--wb);
+  border: 1px solid var(--brd);
+  border-radius: 24px;
+  padding: 4vh 5vw;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.015);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3vh;
+  flex-wrap: wrap;
+}
+
+.ges_hero_glow {
+  position: absolute;
+  top: -30%; right: -10%; width: 50%; height: 160%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--mco) 12%, transparent) 0%, transparent 70%);
+  filter: blur(60px); z-index: 0;
+}
+
+.ges_hero_content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 3vh;
+  flex-wrap: wrap;
+}
+
+.ges_avatar_wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ges_avatar {
+  width: 9vh;
+  height: 9vh;
+  background: linear-gradient(135deg, var(--mco), var(--hva, var(--mco)));
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fz_m4, 1.3rem);
+  font-weight: 800;
+  box-shadow: 0 8px 25px color-mix(in srgb, var(--mco) 30%, transparent);
+}
+
+.ges_welcome h1 {
+  font-size: var(--fz_l1, 1.8rem);
+  font-weight: 800;
+  color: var(--tx1);
+  letter-spacing: -1px;
+  margin-bottom: 0.8vh;
+}
+
+.ges_welcome h1 strong {
+  color: var(--mco);
+}
+
+.ges_welcome p {
+  font-size: var(--fz_m1, 0.95rem);
+  color: var(--tx2);
+  font-weight: 600;
+}
+
+.ges_badge_role {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6vh;
+  background: color-mix(in srgb, var(--mco) 8%, transparent);
+  color: var(--mco);
+  padding: 0.5vh 1.5vh;
+  border-radius: 50px;
+  font-size: var(--fz_s3, 0.8rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-top: 1.2vh;
+}
+
+/* Cards de Estadísticas (KPIs) basados en caches */
+.ges_stats_grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3vh;
+}
+
+@media (max-width: 900px) {
+  .ges_stats_grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ges_stat_card {
+  background: var(--wb);
+  border: 1px solid var(--brd);
+  border-radius: 20px;
+  padding: 3.5vh 3vw;
+  display: flex;
+  align-items: center;
+  gap: 2.5vh;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.005);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ges_stat_card:hover {
+  transform: translateY(-4px);
+  border-color: var(--mco);
+  box-shadow: 0 12px 25px var(--wb);
+}
+
+.ges_stat_icon {
+  width: 7vh;
+  height: 7vh;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fz_m3, 1.2rem);
+}
+
+.ges_stat_icon.cumples { background: color-mix(in srgb, #FF5C69 10%, transparent); color: #FF5C69; }
+.ges_stat_icon.musica { background: color-mix(in srgb, #0EBEFF 10%, transparent); color: #0EBEFF; }
+.ges_stat_icon.blog { background: color-mix(in srgb, #FFDA34 10%, transparent); color: #FFC107; }
+
+.ges_stat_info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4vh;
+}
+
+.ges_stat_val {
+  font-size: var(--fz_l1, 1.8rem);
+  font-weight: 800;
+  color: var(--tx1);
+}
+
+.ges_stat_lbl {
+  font-size: var(--fz_s2, 0.85rem);
+  font-weight: 700;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Quick Navigation Grid */
+.ges_nav_title {
+  font-size: var(--fz_m4, 1.3rem);
+  font-weight: 800;
+  color: var(--tx1);
+  display: flex;
+  align-items: center;
+  gap: 1vh;
+  margin-bottom: 2vh;
+}
+
+.ges_nav_title i {
+  color: var(--mco);
+}
+
+.ges_quick_nav {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2.5vh;
+}
+
+@media (max-width: 768px) {
+  .ges_quick_nav {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ges_nav_card {
+  background: var(--wb);
+  border: 1px solid var(--brd);
+  border-radius: 20px;
+  padding: 3vh;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2vh;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.005);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ges_nav_card:hover {
+  transform: translateX(6px);
+  border-color: var(--brd2);
+}
+
+.ges_nav_left {
+  display: flex;
+  align-items: center;
+  gap: 2.5vh;
+}
+
+.ges_nav_icon {
+  width: 6vh;
+  height: 6vh;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fz_m2, 1.1rem);
+  color: #fff;
+}
+
+.ges_nav_details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4vh;
+}
+
+.ges_nav_details strong {
+  font-size: var(--fz_m1, 0.95rem);
+  color: var(--tx1);
+  font-weight: 700;
+}
+
+.ges_nav_details span {
+  font-size: var(--fz_s3, 0.8rem);
+  color: var(--tx3);
+  font-weight: 600;
+}
+
+.ges_nav_card .fa-arrow-right {
+  color: var(--tx3);
+  transition: transform 0.2s;
+}
+
+.ges_nav_card:hover .fa-arrow-right {
+  transform: translateX(4px);
+  color: var(--mco);
+}

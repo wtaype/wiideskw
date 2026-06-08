@@ -1,0 +1,240 @@
+import { app, titulo, descri, keywii, linkweb } from './wii.js';
+import { Notificacion, wiPath, wiFade } from './widev.js';
+import * as inicioMod from './todos/inicio.js';
+
+export const rolPage = { usuario: '/smile', editor: '/smile', gestor: '/gestor', admin: '/admin' };
+
+const COMUN = [
+  { href: '/acerca', ico: 'fa-circle-info', txt: 'Acerca' }
+];
+
+export const NAV = {
+  todos: {
+    nvleft:  [
+      { href: '/', ico: 'fa-house', txt: 'Bienvenido' },
+      ...COMUN],
+      nvright: [
+      { href: '/descubre', ico: 'fa-compass', txt: 'Descubre' },
+      { isBtn: true, cls: 'bt_auth registrar', ico: 'fa-user-plus', txt: 'Registrar' },
+      { isBtn: true, cls: 'bt_auth login',     ico: 'fa-sign-in-alt', txt: 'Login'  },
+    ],
+  },
+  usuario: {
+    nvleft: [
+      { href: '/smile',     ico: 'fa-house',            txt: 'Dashboard' },
+      { href: '/pc2pc',     ico: 'fa-laptop',           txt: 'PC a PC' },
+      { href: '/pc2movil',  ico: 'fa-mobile-alt',       txt: 'PC a Móvil' },
+      { href: '/pc2web',    ico: 'fa-globe',            txt: 'PC a Web' },
+      { href: '/movil2pc',  ico: 'fa-mobile-alt',       txt: 'Móvil a PC' },
+      ...COMUN,
+    ],
+    nvright: [
+      { href: '/notas',     ico: 'fa-book-open',        txt: 'Notas' },
+      { isPerfil: true }, { isSalir: true },
+    ],
+  },
+  editor: {
+    nvleft:  [],
+    nvright: [],
+  },
+  gestor: {
+    nvleft: [
+      { href: '/gestor',     ico: 'fa-house',           txt: 'Dashboard'    },
+      ...COMUN,
+    ],
+    nvright: [
+      { isPerfil: true }, { isSalir: true },
+    ],
+  },
+  admin: {
+    nvleft: [
+      { href: '/admin',    ico: 'fa-globe',   txt: 'Plataforma' },
+      { href: '/usuarios', ico: 'fa-users',   txt: 'Usuarios'   },
+      ...COMUN,
+    ],
+    nvright: [
+      { href: '/notas',    ico: 'fa-book-open', txt: 'Notas'      },
+      { isPerfil: true }, { isSalir: true },
+    ],
+  },
+  verificar: {
+    nvleft:  [],
+    nvright: [],
+  },
+};
+
+export const RUTAS = [
+  { path: '/inicio',   area: 'todos/' },
+  { path: '/login',    area: 'todos/' },
+  { path: '/acerca',     area: 'todos/acerca/' },
+  { path: '/descubre',   area: 'todos/acerca/' },
+  { path: '/terminos',   area: 'todos/acerca/' },
+  { path: '/cookies',    area: 'todos/acerca/' },
+  { path: '/privacidad', area: 'todos/acerca/' },
+  { path: '/feedback',   area: 'todos/acerca/' },
+  { path: '/contacto',   area: 'todos/acerca/' },
+  { path: '/smile',    area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/notas',    area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/perfil',   area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/mensajes', area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/pc2pc',    area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/pc2movil', area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/pc2web',   area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/movil2pc', area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/gestor',   area: 'gestor/',  roles: ['gestor','admin'] },
+  { path: '/admin',    area: 'admin/',   roles: ['admin']          },
+  { path: '/usuarios', area: 'admin/',   roles: ['admin']          },
+  { path: '/verificar',area: 'admin/verificar/', roles: ['admin']   },
+];
+
+const MODS = import.meta.glob([
+  './{todos,usuarios,gestor,admin}/**/*.js',
+  '!./todos/inicio.js'
+]);
+const rutasMod = (area, page) => MODS[`./${area}${page}.js`];
+
+class WiRutas {
+  constructor() {
+    this.rutas     = {};
+    this.cache     = { '/inicio': inicioMod };
+    this.modActual = null;
+    this.cargand   = false;
+    this.HOME      = 'inicio';
+    this.main      = '#wimain';
+    this.pathActual = null;
+    this.isFirstLoad = true;
+  }
+
+  register(path, fn) { this.rutas[path] = fn; }
+  inicio() { return Promise.resolve(inicioMod); }
+
+  registerAll(getRol) {
+    const pub = {}, priv = {};
+
+    RUTAS.forEach(({ path, area, roles = null, mod }) => {
+      if (path === '/inicio') {
+        pub[path] = () => this.inicio();
+        return;
+      }
+      const page = mod ?? path.split('/').pop();
+      const imp  = rutasMod(area, page);
+      if (!imp) { console.warn(`[ruta] no encontrado: ${area}${page}.js`); return; }
+      roles === null ? (pub[path] = imp) : (priv[path] ??= []).push({ roles, imp });
+    });
+
+    const noAuth = () => Promise.resolve({
+      render: () => '',
+      init:   () => setTimeout(() => this.navigate('/login'), 0),
+    });
+
+    new Set([...Object.keys(pub), ...Object.keys(priv)]).forEach(path => {
+      const pubImp   = pub[path];
+      const privList = priv[path] || [];
+      const resolve  = () => { const rol = getRol?.() || null; return privList.find(e => e.roles.includes(rol)); };
+
+      if (!privList.length)  return this.register(path, pubImp);
+      if (!pubImp)           return this.register(path, () => { const e = resolve(); return e ? e.imp() : noAuth(); });
+      this.register(path, () => { const e = resolve(); return e ? e.imp() : pubImp(); });
+    });
+  }
+
+  async prefetch(ruta) {
+    const norm = wiPath.limpiar(ruta) === '/' ? `/${this.HOME}` : wiPath.limpiar(ruta);
+    if (this.cache[norm] || !this.rutas[norm]) return;
+    try {
+      this.cache[norm] = await this.rutas[norm]();
+      console.log(`⚡ Listo ${norm.replace('/', '')}`);
+    } catch { console.warn('[ruta] prefetch falló:', norm); }
+  }
+
+  async navigate(ruta, historial = true) {
+    if (this.cargand) return;
+    this.cargand = true;
+    const norm = wiPath.limpiar(ruta) === '/' ? `/${this.HOME}` : wiPath.limpiar(ruta);
+
+    if (['/admin', '/usuarios', '/paginas'].includes(norm)) {
+      const { getls } = await import('./widev.js');
+      const wi = getls('wiSmile'), go = r => (this.cargand = false, this.navigate(r, true));
+      const dest = !wi || wi.rol !== 'admin' ? '/' : wi.estado !== 'activo' ? '/registrado' : !sessionStorage.getItem('vault_unlocked') ? '/verificar' : null;
+      if (dest) return go(dest);
+    }
+
+    try {
+      this.modActual?.cleanup?.();
+      const cargar  = this.rutas[norm] ?? rutasMod('todos/', '404');
+      const mod = this.cache[norm] ?? await cargar();
+
+      const [html] = await Promise.all([mod.render?.()]);
+      
+      document.body.classList.remove('is-public-profile');
+      this.marcarNav(norm);
+      window.dispatchEvent(new CustomEvent('winavigate', { detail: { norm } }));
+
+      const mainEl = document.querySelector(this.main);
+      const esHydration = this.isFirstLoad
+        && mainEl
+        && mainEl.children.length > 0
+        && !window.__WIREADY__
+        && norm === `/${this.HOME}`;
+        
+      if (esHydration) {
+        this.isFirstLoad = false;
+      } else {
+        await wiFade(this.main, html);
+      }
+      this.isFirstLoad = false;
+
+      window.scrollTo(0, 0);
+      mod.init?.();
+
+      if (historial) wiPath.poner(norm === `/${this.HOME}` ? '/' : norm, document.title);
+      this.pathActual = norm;
+      this.modActual = mod;
+    } catch (err) {
+      if (err instanceof TypeError && err.message.includes('Failed to fetch')) return location.reload();
+      Notificacion('Error en la ruta');
+      console.error('[ruta] navigate:', err);
+    } finally {
+      this.cargand = false;
+    }
+  }
+
+  marcarNav(norm) {
+    const pag = norm.slice(1) || this.HOME;
+    document.querySelectorAll('.nv_item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll(`.nv_item[data-page="${pag}"]`).forEach(el => el.classList.add('active'));
+  }
+
+  init() {
+    this.marcarNav(wiPath.actual === '/' ? `/${this.HOME}` : wiPath.limpiar(wiPath.actual));
+
+    document.addEventListener('click', (e) => {
+      const item = e.target.closest('.nv_item');
+      if (item) {
+        e.preventDefault();
+        const pag = item.dataset.page;
+        this.navigate(pag === this.HOME ? '/' : `/${pag}`);
+      }
+    });
+
+    const prefetchHandler = (e) => {
+      const item = e.target.closest('.nv_item[data-page]');
+      if (item) {
+        const pag = item.dataset.page;
+        this.prefetch(pag === this.HOME ? '/' : `/${pag}`);
+      }
+    };
+    document.addEventListener('mouseover', prefetchHandler, { passive: true });
+    document.addEventListener('touchstart', prefetchHandler, { passive: true });
+
+    window.addEventListener('popstate', (e) => {
+      const ruta = e.state?.ruta || wiPath.actual;
+      const norm = wiPath.limpiar(ruta) === '/' ? `/${this.HOME}` : wiPath.limpiar(ruta);
+      if (norm === this.pathActual) return;
+      this.navigate(ruta, false);
+    });
+    this.navigate(wiPath.actual, false);
+  }
+}
+
+export const rutas = new WiRutas();

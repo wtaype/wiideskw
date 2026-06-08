@@ -1,0 +1,102 @@
+/* ==================== CONTAINER ==================== */
+.wm_container { max-width: 700px; margin: 0 auto; height: 85vh; display: flex; flex-direction: column; background: var(--bg); border-radius: 1.5vh; overflow: hidden; box-shadow: 0 1vh 3vh rgba(0,0,0,.1) }
+
+/* ==================== HEADER ==================== */
+.wm_header { display: flex; justify-content: space-between; align-items: center; padding: 2vh 2.5vh; background: var(--mco); color: var(--txa); box-shadow: 0 .3vh 1vh rgba(0,0,0,.15); z-index: 10 }
+.wm_info { display: flex; align-items: center; gap: 1.5vh }
+.wm_avatar { width: 5vh; height: 5vh; border-radius: 50%; border: 2px solid var(--txa); object-fit: cover }
+.wm_text h1 { font-size: var(--fz_m4); font-weight: 700; color: var(--txa); margin: 0 }
+.wm_text p { font-size: var(--fz_m1); color: rgba(255,255,255,.85); margin: 0 }
+.wm_status { display: flex; align-items: center; gap: .8vh; background: rgba(255,255,255,.15); padding: .8vh 1.5vh; border-radius: 50px }
+.wm_dot { width: 1vh; height: 1vh; border-radius: 50%; background: #94a3b8; animation: wmPulse 2s infinite }
+.wm_dot.active { background: var(--success, #4ade80); box-shadow: 0 0 1vh var(--success, #4ade80); animation: none }
+.wm_dot.error { background: #ef4444; animation: none }
+@keyframes wmPulse { 0%,100% { opacity: 1; transform: scale(1) } 50% { opacity: .5; transform: scale(.9) } }
+.wm_dotxt { font-size: var(--fz_s4); color: var(--txa); font-weight: 600 }
+
+/* ==================== CHAT ==================== */
+.wm_chat { flex: 1; overflow-y: auto; padding: 2vh; background: var(--wb); scrollbar-width: thin; scrollbar-color: var(--mco) var(--bg4); display: flex; flex-direction: column }
+.wm_chat::-webkit-scrollbar { width: .6vh }
+.wm_chat::-webkit-scrollbar-thumb { background: var(--mco); border-radius: 1vh }
+
+/* DATE SEPARATOR */
+.wm_sep { display: flex; align-items: center; justify-content: center; padding: 1.5vh 0; position: sticky; top: 0; z-index: 5 }
+.wm_sep span { background: var(--bg1); color: var(--tx2); font-size: var(--fz_s4); font-weight: 600; padding: .5vh 1.5vh; border-radius: 50px; box-shadow: 0 .2vh .6vh rgba(0,0,0,.08); border: 1px solid var(--brd) }
+
+/* EMPTY */
+.wm_loading, .wm_empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 2vh; color: var(--tx2); text-align: center }
+.wm_loading i { font-size: 5vh; color: var(--mco) }
+.wm_empty i { font-size: 8vh; color: var(--tx3); opacity: .3; margin-bottom: 1vh }
+.wm_empty p { font-size: var(--fz_m4); font-weight: 600; color: var(--tx); margin: 0 0 1vh }
+.wm_empty span { font-size: var(--fz_m2); color: var(--tx2) }
+
+/* MESSAGE ITEM */
+.wm_item { display: flex; align-items: flex-end; gap: 1vh; margin-bottom: 1vh; animation: wmSlide .3s ease-out; cursor: pointer; position: relative; transition: all .3s }
+@keyframes wmSlide { from { opacity: 0; transform: translateY(1vh) } to { opacity: 1; transform: translateY(0) } }
+.wm_item:hover { transform: translateX(.5vh) }
+.wm_bubble { flex: 1; background: var(--mco); padding: 1.5vh 2vh; border-radius: 1.2vh 1.2vh .3vh 1.2vh; box-shadow: 0 .3vh 1vh rgba(0,0,0,.1); transition: all .3s; position: relative; overflow: hidden }
+.wm_item:hover .wm_bubble { box-shadow: 0 .5vh 1.5vh rgba(0,0,0,.15); transform: translateY(-.2vh) }
+.wm_bubble::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: .3vh; background: rgba(255,255,255,.3) }
+.wm_txt { font-size: var(--fz_m2); color: var(--txa); line-height: 1.5; word-wrap: break-word; white-space: pre-wrap; margin: 0 0 .8vh }
+.wm_foot { display: flex; justify-content: flex-end; align-items: center; gap: .6vh }
+.wm_time { font-size: var(--fz_s3); color: rgba(255,255,255,.7); font-weight: 500 }
+.wm_check { font-size: var(--fz_s4); color: rgba(255,255,255,.8) }
+.wm_item.copied .wm_check { color: #4ade80; animation: wmBounce .5s ease-out }
+@keyframes wmBounce { 0%,100% { transform: scale(1) } 50% { transform: scale(1.3) } }
+
+/* DELETE BUTTON */
+.wm_del { width: 4vh; height: 4vh; background: rgba(239,68,68,.1); border: none; border-radius: 50%; color: #ef4444; font-size: var(--fz_m2); cursor: pointer; transition: all .3s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: 0 }
+.wm_item:hover .wm_del { opacity: 1 }
+.wm_del:hover { background: #ef4444; color: var(--F); transform: scale(1.15) }
+.wm_item.deleting { animation: wmDelete .3s ease-out forwards }
+@keyframes wmDelete { to { opacity: 0; transform: translateX(100%); height: 0; margin: 0 } }
+
+/* ==================== INPUT ==================== */
+.wm_input { display: flex; gap: 1.5vh; padding: 2vh; align-items: center; background: var(--bg3); border-top: 1px solid var(--brd) }
+.wm_wrap { flex: 1; position: relative; background: var(--wb); border: 2px solid var(--brd); border-radius: 1.5vh; transition: all .3s }
+.wm_wrap:focus-within { border-color: var(--mco); box-shadow: 0 0 0 3px rgba(0,0,0,.05) }
+#wmNuevo { width: 100%; padding: 1.5vh 2vh 3vh; background: transparent; border: none; color: var(--tx); font-size: var(--fz_m2); font-family: inherit; outline: none; resize: none; line-height: 1.5; min-height: 5vh; max-height: 150px }
+#wmNuevo::placeholder { color: var(--tx3) }
+.wm_count { position: absolute; bottom: .8vh; right: 1.5vh; font-size: var(--fz_s3); color: var(--tx3); pointer-events: none; background: var(--wb); padding: .2vh .5vh; border-radius: .5vh }
+#wmEnviar { width: 6vh; height: 6vh; background: var(--mco); border: none; border-radius: 50%; color: var(--txa); font-size: var(--fz_m3); cursor: pointer; transition: all .3s; display: flex; align-items: center; justify-content: center; flex-shrink: 0 }
+#wmEnviar:hover:not(:disabled) { transform: scale(1.1); box-shadow: 0 .5vh 1.5vh rgba(0,0,0,.2) }
+#wmEnviar:disabled { opacity: .5; cursor: not-allowed }
+
+/* ==================== MODAL ==================== */
+.wm_modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.6); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 9999; opacity: 0; transition: opacity .3s }
+.wm_modal.show { display: flex; opacity: 1 }
+.wm_modal_body { background: var(--wb); padding: 4vh 3vh; border-radius: 2vh; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 2vh 5vh rgba(0,0,0,.3); animation: wmModalIn .3s ease-out }
+@keyframes wmModalIn { from { opacity: 0; transform: scale(.95) translateY(-2vh) } to { opacity: 1; transform: scale(1) translateY(0) } }
+.wm_modal_body > i { font-size: 6vh; color: #ef4444; margin-bottom: 2vh; display: block }
+.wm_modal_body h3 { font-size: var(--fz_l1); color: var(--tx); margin-bottom: 1vh }
+.wm_modal_body p { font-size: var(--fz_m2); color: var(--tx2); margin-bottom: 3vh }
+.wm_modal_acts { display: flex; gap: 1.5vh }
+.wm_cancel, .wm_confirm { flex: 1; padding: 1.5vh; border: none; border-radius: 1vh; font-size: var(--fz_m2); font-weight: 600; cursor: pointer; transition: all .3s }
+.wm_cancel { background: var(--bg1); color: var(--tx) }
+.wm_cancel:hover { background: var(--bg4) }
+.wm_confirm { background: #ef4444; color: var(--F) }
+.wm_confirm:hover { background: #dc2626; transform: translateY(-.2vh); box-shadow: 0 .5vh 1.5vh rgba(239,68,68,.3) }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .wm_container { height: 88vh; max-width: 100% }
+  .wm_header { padding: 1.5vh 2vh }
+  .wm_avatar { width: 4.5vh; height: 4.5vh }
+  .wm_text h1 { font-size: var(--fz_m3) }
+  .wm_text p { font-size: var(--fz_s4) }
+  .wm_status { padding: .6vh 1.2vh }
+  .wm_dotxt { font-size: var(--fz_s3) }
+  .wm_chat { padding: 1.5vh }
+  .wm_item { margin-bottom: .8vh }
+  .wm_bubble { padding: 1.2vh 1.8vh }
+  .wm_txt { font-size: var(--fz_m1) }
+  .wm_input { padding: 1.5vh }
+  #wmNuevo { padding: 1.2vh 1.8vh 3vh; font-size: var(--fz_m1) }
+  #wmEnviar { width: 5.5vh; height: 5.5vh }
+}
+@media (max-width: 480px) {
+  .wm_text h1 { font-size: var(--fz_m2) }
+  .wm_status { display: none }
+  .wm_modal_body { padding: 3vh 2vh }
+  .wm_modal_acts { flex-direction: column }
+}

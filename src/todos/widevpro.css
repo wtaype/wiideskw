@@ -1,0 +1,599 @@
+/* ==================== ESTILOS WIDEVPRO PRO TOTAL ==================== */
+.wvp_container {
+  max-width: 1400px;
+  margin: 3vh auto;
+  padding: 0 2vw;
+  display: flex;
+  flex-direction: column;
+  gap: 5vh;
+}
+
+.wvp_hero {
+  position: relative;
+  border-radius: 2.2vh;
+  padding: 5vh 4vh;
+  overflow: hidden;
+  background: var(--wb, #fff);
+  border: 1px solid var(--brd, rgba(0,0,0,0.08));
+  box-shadow: var(--bs_l, 0 4px 12px rgba(0,0,0,0.05));
+}
+
+.wvp_hero_glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, var(--bg4, rgba(var(--mco_rgb), 0.05)) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.wvp_title {
+  font-size: var(--fz_l2, 2.2rem);
+  font-weight: 800;
+  color: var(--tx1, #111);
+  margin-bottom: 1.5vh;
+  display: flex;
+  align-items: center;
+  gap: 1.5vh;
+}
+
+.wvp_desc {
+  font-size: var(--fz_m2, 1.1rem);
+  color: var(--tx3, #666);
+  max-width: 850px;
+  line-height: 1.6;
+}
+
+/* --- SECCIONES Y TITULOS --- */
+.wvp_sec {
+  display: flex;
+  flex-direction: column;
+  gap: 3vh;
+}
+
+.wvp_sec_title {
+  border-left: 4px solid var(--mco, #0284c7);
+  padding-left: 2vh;
+}
+
+.wvp_sec_title h2 {
+  font-size: var(--fz_l1, 1.6rem);
+  font-weight: 750;
+  color: var(--tx1, #111);
+  margin-bottom: 0.5vh;
+}
+
+.wvp_sec_title p {
+  font-size: var(--fz_s3, 0.9rem);
+  color: var(--tx3, #666);
+}
+
+.wvp_grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3vh;
+}
+
+@media (min-width: 768px) {
+  .wvp_grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.wvp_card {
+  background: var(--wb, #fff);
+  border: 1px solid var(--brd, rgba(0,0,0,0.08));
+  border-radius: 1.6vh;
+  padding: 3vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2.5vh;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.wvp_card:hover {
+  transform: translateY(-0.3vh);
+  box-shadow: var(--bs_l, 0 8px 24px rgba(0,0,0,0.06));
+}
+
+.wvp_card_head {
+  display: flex;
+  align-items: center;
+  gap: 2vh;
+}
+
+.wvp_card_ico {
+  width: 5vh;
+  height: 5vh;
+  background: var(--bg4, rgba(var(--mco_rgb), 0.08));
+  color: var(--mco, #0284c7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1.2vh;
+  font-size: 1.3rem;
+}
+
+.wvp_card_info h3 {
+  font-size: var(--fz_m2, 1.1rem);
+  font-weight: 700;
+  color: var(--tx1, #111);
+}
+
+.wvp_card_info p {
+  font-size: var(--fz_s4, 0.8rem);
+  color: var(--tx3, #666);
+}
+
+/* --- METRICAS DE RENDIMIENTO --- */
+.wvp_results {
+  background: var(--inp, #f9fafb);
+  border: 1px solid var(--brd, rgba(0,0,0,0.08));
+  border-radius: 1vh;
+  padding: 2vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5vh;
+}
+
+.wvp_results_header {
+  font-size: var(--fz_s4, 0.8rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--tx3, #666);
+  border-bottom: 1px solid var(--brd, rgba(0,0,0,0.08));
+  padding-bottom: 0.5vh;
+}
+
+.wvp_bar_container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5vh;
+}
+
+.wvp_bar_label {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fz_s4, 0.8rem);
+  font-weight: 600;
+  color: var(--tx2, #444);
+}
+
+.wvp_bar_outer {
+  height: 1vh;
+  background: var(--bg6, #e5e7eb);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.wvp_bar_inner {
+  height: 100%;
+  width: 0%;
+  border-radius: 99px;
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wvp_bar_inner.vanilla {
+  background: linear-gradient(90deg, #10b981 0%, #10b981 100%);
+}
+
+.wvp_bar_inner.jquery {
+  background: linear-gradient(90deg, #ef4444 0%, #f43f5e 100%);
+}
+
+.wvp_speedup {
+  font-size: var(--fz_s4, 0.8rem);
+  font-weight: 700;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  gap: 0.5vh;
+}
+
+/* --- LISTADO NUMERADO DE HERRAMIENTAS --- */
+.wvp_layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4vh 3vh;
+}
+
+@media (min-width: 900px) {
+  .wvp_layout {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.wvp_tool_card {
+  background: var(--wb, #fff);
+  border: 1px solid var(--brd, rgba(0,0,0,0.08));
+  border-radius: 1.6vh;
+  padding: 3.5vh 3vh 3vh 3vh;
+  display: flex;
+  flex-direction: column;
+  gap: 2vh;
+  position: relative;
+  transition: box-shadow 0.25s, transform 0.2s;
+}
+
+.wvp_tool_card:hover {
+  transform: translateY(-0.2vh);
+  box-shadow: var(--bs_l, 0 8px 24px rgba(0,0,0,0.06));
+}
+
+.wvp_badge_num {
+  position: absolute;
+  top: -1.8vh;
+  left: 2.5vh;
+  background: var(--mco, #0284c7);
+  color: #fff;
+  font-size: var(--fz_s4, 0.8rem);
+  font-weight: 800;
+  padding: 0.5vh 1.6vh;
+  border-radius: 99px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.wvp_tool_header {
+  display: flex;
+  align-items: center;
+  gap: 1.5vh;
+  border-bottom: 1px solid var(--brd, rgba(0,0,0,0.08));
+  padding-bottom: 1.5vh;
+}
+
+.wvp_tool_ico {
+  font-size: var(--fz_m4, 1.3rem);
+  color: var(--mco, #0284c7);
+  width: 4.5vh;
+  height: 4.5vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg4, rgba(var(--mco_rgb), 0.08));
+  border-radius: 50%;
+}
+
+.wvp_tool_title h2 {
+  font-size: var(--fz_m2, 1.1rem);
+  font-weight: 750;
+  color: var(--tx1, #111);
+}
+
+.wvp_tool_title span {
+  font-size: var(--fz_s4, 0.8rem);
+  color: var(--tx3, #666);
+  font-family: monospace;
+}
+
+.wvp_tool_desc {
+  font-size: var(--fz_s3, 0.9rem);
+  color: var(--tx2, #444);
+  line-height: 1.6;
+}
+
+/* --- ACCIONES INTERACTIVAS --- */
+.wvp_action_zone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5vh;
+  align-items: center;
+  width: 100%;
+}
+
+.wvp_btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1vh;
+  background: var(--mco, #0284c7);
+  color: #fff;
+  border: none;
+  padding: 1.2vh 2.4vh;
+  font-size: var(--fz_s3, 0.9rem);
+  font-weight: 700;
+  border-radius: 0.8vh;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s, background-color 0.2s;
+}
+
+.wvp_btn:hover {
+  opacity: 0.9;
+  transform: translateY(-0.1vh);
+}
+
+.wvp_btn:active {
+  transform: translateY(0);
+}
+
+.wvp_btn_sec {
+  background: var(--bg5, #f3f4f6);
+  color: var(--tx1, #111);
+  border: 1px solid var(--brd, rgba(0,0,0,0.08));
+}
+
+.wvp_btn_sec:hover {
+  background: var(--bg6, #e5e7eb);
+}
+
+.wvp_btn_success { background-color: #3cd741; }
+.wvp_btn_error { background-color: #ff3849; }
+.wvp_btn_warning { background-color: #ffa726; color: #111; }
+.wvp_btn_info { background-color: #00a8e6; }
+
+.wvp_input {
+  flex: 1;
+  min-width: 160px;
+  padding: 1vh 1.6vh;
+  font-size: var(--fz_s3, 0.9rem);
+  border-radius: 0.8vh;
+  background: var(--inp, #f9fafb);
+  color: var(--tx, #111);
+  border: 1px solid var(--brd, rgba(0,0,0,0.08));
+  transition: border-color 0.2s;
+}
+
+.wvp_input:focus {
+  border-color: var(--mco, #0284c7);
+  outline: none;
+}
+
+/* --- CONSOLAS DE SALIDA DE LOGS --- */
+.wvp_console {
+  background: var(--inp, #1e293b);
+  border: 1px solid var(--brd, rgba(0,0,0,0.15));
+  border-radius: 1vh;
+  padding: 2vh;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: var(--fz_s4, 0.8rem);
+  color: #38bdf8;
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
+  min-height: 70px;
+  overflow-y: auto;
+  overflow-x: auto;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.wvp_console_header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  border-bottom: 1px solid #334155;
+  padding-bottom: 0.5vh;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ==================== ESTILOS ESPECÍFICOS PLAYGROUNDS ==================== */
+
+/* 2. wiVista Scrollbox and Pages */
+.scroll_container_test {
+  width: 100%;
+}
+.scroll_box {
+  width: 100%;
+  height: 15vh;
+  border: 1px solid var(--brd, rgba(0,0,0,0.08));
+  border-radius: 0.8vh;
+  overflow-y: scroll;
+  background: var(--inp, #f9fafb);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.scroll_page {
+  padding: 2vh;
+  margin: 1vh;
+  background: var(--wb, #fff);
+  border: 1px solid var(--brd, rgba(0,0,0,0.05));
+  border-radius: 0.6vh;
+  font-size: var(--fz_s3, 0.9rem);
+  color: var(--tx1, #111);
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+  animation: mf .3s ease;
+}
+.scroll_loader {
+  padding: 2vh;
+  text-align: center;
+  color: var(--mco, #0284c7);
+  font-weight: bold;
+  font-size: var(--fz_s4, 0.8rem);
+}
+
+/* 3. herowi Stagger items */
+#herowi_container {
+  display: flex;
+  gap: 1vh;
+  align-items: center;
+  width: 100%;
+}
+.hwi_item {
+  flex: 1;
+  padding: 1vh;
+  text-align: center;
+  background: var(--bg5, #f3f4f6);
+  border: 1px solid var(--brd, rgba(0,0,0,0.08));
+  border-radius: 0.6vh;
+  font-size: var(--fz_s4, 0.8rem);
+  font-weight: 600;
+  opacity: 0; /* Para herowi */
+}
+
+/* 4. showi Dots (Visible by default, hidden when having .swi) */
+.showi_box {
+  display: flex;
+  gap: 1.5vh;
+  flex: 1;
+}
+.showi_item {
+  flex: 1;
+  padding: 1vh;
+  text-align: center;
+  background: var(--bg4, rgba(var(--mco_rgb), 0.08));
+  border: 1px solid var(--mco, #0284c7);
+  border-radius: 0.8vh;
+  font-size: var(--fz_s4, 0.8rem);
+  font-weight: 700;
+  color: var(--mco, #0284c7);
+  transition: opacity .7s ease, transform .7s ease;
+}
+.showi_item.swi {
+  opacity: 0;
+  transform: translateY(3vh);
+}
+
+/* 6. ScrollSpy Layout */
+.spy_playground {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5vh;
+  width: 100%;
+}
+.spy_nav {
+  display: flex;
+  border: 1px solid var(--brd, rgba(0,0,0,0.08));
+  border-radius: 0.8vh;
+  overflow: hidden;
+  background: var(--wb, #fff);
+}
+.spy_lnk {
+  flex: 1;
+  text-align: center;
+  padding: 0.8vh;
+  font-size: var(--fz_s4, 0.8rem);
+  font-weight: 700;
+  color: var(--tx2, #444);
+  text-decoration: none;
+  background: transparent;
+  transition: background 0.2s, color 0.2s;
+}
+.spy_lnk.active {
+  background: var(--mco, #0284c7);
+  color: #fff;
+}
+.spy_viewport {
+  height: 10vh;
+  border: 1px solid var(--brd, rgba(0,0,0,0.08));
+  border-radius: 0.8vh;
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+}
+.spy_section {
+  height: 10vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: var(--fz_s3, 0.9rem);
+  border-bottom: 1px solid var(--brd, rgba(0,0,0,0.05));
+}
+.spy_section:nth-child(even) {
+  background: var(--bg4, rgba(var(--mco_rgb), 0.02));
+}
+
+/* 13. wiTip Trigger Area */
+.wvp_tip_trigger {
+  flex: 1;
+  padding: 1.2vh 2vh;
+  border: 2px dashed var(--brd, rgba(0,0,0,0.15));
+  border-radius: 0.8vh;
+  text-align: center;
+  font-size: var(--fz_s3, 0.9rem);
+  font-weight: 600;
+  color: var(--tx2, #444);
+  cursor: help;
+  transition: border-color 0.2s, background 0.2s;
+}
+.wvp_tip_trigger:hover {
+  border-color: var(--mco, #0284c7);
+  background: var(--bg4, rgba(var(--mco_rgb), 0.05));
+}
+
+/* 20. Sibling Rows and adrm boxes */
+.siblings_row {
+  display: flex;
+  gap: 1vh;
+  width: 100%;
+}
+.sib_box {
+  flex: 1;
+  padding: 1vh;
+  text-align: center;
+  border: 1px solid var(--brd, rgba(0,0,0,0.08));
+  background: var(--bg5, #f3f4f6);
+  border-radius: 0.6vh;
+  font-size: var(--fz_s4, 0.8rem);
+  font-weight: 700;
+  color: var(--tx2, #444);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sib_box.active {
+  background: var(--mco, #0284c7);
+  color: #fff;
+  border-color: var(--mco, #0284c7);
+}
+.sib_box.flash_active {
+  background: #ffa726;
+  color: #111;
+  transform: scale(1.05);
+}
+.sib_box.updating {
+  animation: wvp_updating_pulse 0.5s ease;
+}
+@keyframes wvp_updating_pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); opacity: 0.7; }
+  100% { transform: scale(1); }
+}
+
+/* 22. Fade Sandbox Box */
+.fade_sandbox_box {
+  width: 100%;
+  padding: 2vh;
+  text-align: center;
+  background: var(--inp, #f9fafb);
+  border: 1px solid var(--brd, rgba(0,0,0,0.08));
+  border-radius: 0.8vh;
+  font-weight: 700;
+  font-size: var(--fz_s3, 0.9rem);
+  color: var(--tx1, #111);
+}
+
+/* Sandbox and other items */
+.wvp_bench_sandbox {
+  display: none;
+}
+
+/* Modal Demostración */
+.wvp_modal_body {
+  padding: 2vh;
+  display: flex;
+  flex-direction: column;
+  gap: 2vh;
+  text-align: center;
+}
+.wvp_modal_body h2 {
+  font-size: var(--fz_l1, 1.6rem);
+  color: var(--success, #3cd741);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5vh;
+  font-weight: 800;
+}
+.wvp_modal_body p {
+  font-size: var(--fz_m2, 1.1rem);
+  color: var(--tx2, #444);
+  line-height: 1.6;
+}
+
+.wvp_btn_success:hover { opacity: 0.9; }
+.wvp_btn_error:hover { opacity: 0.9; }
+.wvp_btn_warning:hover { opacity: 0.9; }
+.wvp_btn_info:hover { opacity: 0.9; }

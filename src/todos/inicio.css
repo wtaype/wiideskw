@@ -1,0 +1,587 @@
+/* =====================================================
+   INICIO.CSS — Linkwii
+   1.  Base & Wrap
+   2.  Animaciones de entrada (hero)
+   3.  Hero — layout
+   4.  Hero — izquierda
+   5.  Hero — roles animados
+   6.  Hero — stats
+   7.  Hero — botones
+   8.  Hero — preview planner
+   9.  Hero — floating badges
+   10. Sección header compartido
+   11. Cards funcionalidades
+   12. ¿Por qué Winwii?
+   13. CTA final
+   14. Responsive
+===================================================== */
+
+
+/* ── 1. BASE ──────────────────────────────────────── */
+.ini_wrap {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2vw;
+}
+
+
+/* ── 2. ANIMACIONES DE ENTRADA ────────────────────── */
+
+/* Izquierda: sube desde abajo */
+@keyframes ini_fromBottom {
+  from { opacity: 0; transform: translateY(3.5vh); }
+  to   { opacity: 1; transform: translateY(0);     }
+}
+
+/* Derecha: entra desde la derecha */
+@keyframes ini_fromRight {
+  from { opacity: 0; transform: translateX(4vh); }
+  to   { opacity: 1; transform: translateX(0);   }
+}
+
+/* Ola de la mano */
+@keyframes ini_wave {
+  0%, 100% { transform: rotate(0deg);   }
+  10%, 30% { transform: rotate(14deg);  }
+  20%       { transform: rotate(-8deg); }
+  40%       { transform: rotate(-4deg); }
+  50%       { transform: rotate(10deg); }
+}
+
+/* Parpadeo del punto verde */
+@keyframes ini_blink {
+  0%, 100% { opacity: 1;  }
+  50%       { opacity: .2; }
+}
+
+/* Flotación de badges */
+@keyframes ini_float {
+  0%, 100% { transform: translateY(0);     }
+  50%       { transform: translateY(-18px); }
+}
+
+/* Pulso del ícono CTA */
+@keyframes ini_pulse {
+  0%, 100% { transform: scale(1);    opacity: .15; }
+  50%       { transform: scale(1.05); opacity: .22; }
+}
+
+/* Clases aplicadas a elementos del hero izquierda */
+.ini_saludo,
+.ini_titulo,
+.ini_roles,
+.ini_sub,
+.ini_stats,
+.ini_btns {
+  opacity: 0;
+  animation: ini_fromBottom .7s cubic-bezier(.4,0,.2,1) forwards;
+  animation-delay: var(--d, 0s);
+}
+
+/* Clases aplicadas a elementos del hero derecha */
+.ini_linkwii_preview,
+.ini_ftech {
+  opacity: 0;
+  animation: ini_fromRight .7s cubic-bezier(.4,0,.2,1) forwards;
+  animation-delay: var(--d, 0s);
+}
+
+
+/* ── 3. HERO LAYOUT ───────────────────────────────── */
+.ini_hero {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 6vw;
+  align-items: center;
+  min-height: 88vh;
+  padding: 4vh 0 6vh;
+}
+
+
+/* ── 4. HERO IZQUIERDA ────────────────────────────── */
+.ini_saludo {
+  display: inline-flex;
+  align-items: center;
+  gap: 1vh;
+  font-size: var(--fz_m4);
+  font-weight: 600;
+  color: var(--tx);
+  margin-bottom: 1.8vh;
+}
+
+.ini_wave {
+  display: inline-block;
+  font-size: var(--fz_l1);
+  transform-origin: 70% 70%;
+  animation: ini_wave 1.8s ease-in-out infinite,
+             ini_fromBottom .7s cubic-bezier(.4,0,.2,1) forwards;
+  animation-delay: 0s, 0s;
+}
+
+.ini_titulo {
+  font-size: clamp(2rem, 4.2vw, 3.6rem);
+  font-weight: 800;
+  color: var(--tx);
+  line-height: 1.15;
+  margin-bottom: 2vh;
+}
+
+.ini_grad {
+  background: linear-gradient(135deg, var(--mco) 0%, var(--bg2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ini_sub {
+  font-size: var(--fz_m4);
+  color: var(--tx2);
+  line-height: 1.75;
+  margin-bottom: 3.5vh;
+  max-width: 580px;
+}
+
+
+/* ── 5. ROLES ANIMADOS ────────────────────────────── */
+.ini_roles {
+  height: 5vh;
+  margin-bottom: 3vh;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+/* override: .ini_roles ya tiene ini_fromBottom, el role individual no */
+.ini_role {
+  position: absolute;
+  font-size: clamp(1.2rem, 5vw, var(--fz_l1));
+  font-weight: 700;
+  color: var(--mco);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(120%);
+  /* SIN animation aquí — se controla con JS (.active) */
+  transition: opacity .55s cubic-bezier(.4,0,.2,1),
+              transform .55s cubic-bezier(.4,0,.2,1);
+}
+
+.ini_role.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+/* ── 6. STATS ─────────────────────────────────────── */
+.ini_stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5vw;
+  margin-bottom: 3.5vh;
+}
+
+.ini_stat {
+  text-align: center;
+  padding: 1.8vh 1vw;
+  background: var(--bg1);
+  border-radius: 12px;
+  border: 2px solid transparent;
+  backdrop-filter: blur(8px);
+  transition: border-color var(--tr_m),
+              transform var(--tr_m),
+              box-shadow var(--tr_m);
+}
+
+.ini_stat:hover {
+  border-color: var(--mco);
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.14);
+}
+
+.ini_stat_n {
+  font-size: var(--fz_x1);
+  font-weight: 800;
+  color: var(--mco);
+  line-height: 1;
+  margin-bottom: .5vh;
+  font-variant-numeric: tabular-nums;
+}
+
+.ini_stat_l {
+  font-size: var(--fz_s4);
+  color: var(--tx2);
+  font-weight: 500;
+}
+
+
+/* ── 7. BOTONES ───────────────────────────────────── */
+.ini_btns {
+  display: flex;
+  gap: 1.5vh;
+  flex-wrap: wrap;
+}
+
+.ini_btn_p,
+.ini_btn_s {
+  display: inline-flex;
+  align-items: center;
+  gap: 1vh;
+  padding: 1.4vh 2.8vw;
+  border-radius: 12px;
+  font-size: var(--fz_m3);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  border: 2px solid transparent;
+  transition: transform var(--tr_m),
+              box-shadow var(--tr_m),
+              filter var(--tr_m),
+              background var(--tr_m),
+              border-color var(--tr_m);
+}
+
+.ini_btn_p {
+  background: var(--mco);
+  color: var(--txa);
+  box-shadow: 0 4px 16px rgba(0,0,0,.2);
+}
+
+.ini_btn_p:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0,0,0,.28);
+  filter: brightness(1.1);
+}
+
+.ini_btn_s {
+  background: transparent;
+  color: var(--tx);
+  border-color: var(--brd);
+}
+
+.ini_btn_s:hover {
+  background: var(--bg1);
+  border-color: var(--mco);
+  transform: translateY(-3px);
+}
+
+
+/* ── 8. PREVIEW PLANNER ───────────────────────────── */
+.ini_hero_visual {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 62vh;
+}
+
+.ini_nw_preview {
+  background: var(--wb);
+  border: 1px solid var(--brd);
+  border-radius: 12px;
+  box-shadow: 0 24px 64px rgba(0,0,0,.16), 0 4px 12px rgba(0,0,0,.08);
+  width: 100%;
+  max-width: 390px;
+  height: 380px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: box-shadow var(--tr_s), transform var(--tr_s);
+  position: relative;
+  z-index: 2;
+}
+
+.ini_nw_preview:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 32px 80px color-mix(in srgb, var(--mco) 20%, transparent);
+}
+
+.ini_nw_head {
+  height: 40px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; padding: 0 15px; gap: 15px; background: var(--bg1);
+}
+.ini_nw_dots { display: flex; gap: 6px; }
+.ini_nw_dots div { width: 10px; height: 10px; border-radius: 50%; background: var(--tx3); opacity: 0.3; }
+.ini_nw_dots div:nth-child(1) { background: #FF5C69; opacity: 0.8; }
+.ini_nw_dots div:nth-child(2) { background: #FFDA34; opacity: 0.8; }
+.ini_nw_dots div:nth-child(3) { background: #29C72E; opacity: 0.8; }
+.ini_nw_search { flex: 1; height: 24px; background: var(--bg); border-radius: 4px; border: 1px solid var(--brd); font-size: 0.7rem; color: var(--tx3); display: flex; align-items: center; padding: 0 10px; }
+
+.ini_nw_body { display: flex; flex: 1; overflow: hidden; background: var(--bg); }
+.ini_nw_side { width: 60px; border-right: 1px solid var(--brd); display: flex; flex-direction: column; align-items: center; padding-top: 15px; gap: 12px; background: var(--bg1); }
+.ini_nw_side div { width: 30px; height: 30px; border-radius: 8px; background: var(--bg4); opacity: 0.5; }
+.ini_nw_side .active { opacity: 1; background: var(--mco); }
+
+.ini_nw_main { flex: 1; padding: 15px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+.ini_nw_card { padding: 12px; background: var(--wb); border: 1px solid var(--brd); border-radius: 8px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+.ini_nw_card div:first-child { width: 40%; height: 8px; background: var(--tx3); border-radius: 4px; opacity: 0.4; }
+.ini_nw_card div:last-child { width: 80%; height: 6px; background: var(--bg4); border-radius: 3px; }
+
+
+/* ── 9. FLOATING BADGES ───────────────────────────── */
+.ini_ftech {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  background: var(--wb);
+  border: 1px solid var(--brd);
+  border-radius: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,.14);
+  cursor: pointer;
+  /* float empieza DESPUÉS de que termine la entrada */
+  animation: ini_fromRight .7s cubic-bezier(.4,0,.2,1) forwards,
+             ini_float 3.2s ease-in-out var(--fd, 1s) infinite;
+  animation-delay: var(--d, 0s), calc(var(--d, 0s) + .7s);
+  transition: box-shadow var(--tr_m);
+}
+
+.ini_ftech i { color: var(--mco); }
+.ini_ftech:hover { box-shadow: 0 14px 36px rgba(0,0,0,.22); }
+
+.ini_ft1 { top: 6%;     left: 2%;  --fd:0s;   }
+.ini_ft2 { top: 20%;    right: 2%; --fd:.5s;  }
+.ini_ft3 { bottom: 26%; left: 2%;  --fd:1s;   }
+.ini_ft4 { bottom: 8%;  right: 2%; --fd:1.5s; }
+
+
+/* ── 10. SECTION HEADER COMPARTIDO ───────────────── */
+.ini_sec_head   { text-align: center; margin-bottom: 6vh; }
+.ini_sec_tit    { font-size: var(--fz_x1); font-weight: 800; color: var(--tx); margin-bottom: 1vh; }
+.ini_sec_line   { width: 72px; height: 4px; background: linear-gradient(90deg, var(--mco), var(--bg2)); margin: .8vh auto 1.6vh; border-radius: 2px; }
+.ini_sec_desc   { font-size: var(--fz_m3); color: var(--tx2); }
+
+
+/* ── 11. CARDS FUNCIONALIDADES ────────────────────── */
+.ini_cats_sec { padding: 8vh 0; }
+
+.ini_cats_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(320px,100%), 1fr));
+  gap: 2vh;
+}
+
+.ini_cat_card {
+  background: var(--wb);
+  border: 2px solid transparent;
+  border-radius: 16px;
+  padding: 2.8vh 2vw;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6vh;
+  transition: border-color .35s, transform .35s, box-shadow .35s;
+}
+
+.ini_cat_card:hover {
+  border-color: var(--cc);
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(0,0,0,.13);
+}
+
+.ini_cat_bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--cc);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .38s cubic-bezier(.4,0,.2,1);
+}
+
+.ini_cat_card:hover .ini_cat_bar { transform: scaleX(1); }
+
+.ini_cat_top {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.4vh;
+}
+
+.ini_cat_ico {
+  width: 5.5vh;
+  height: 5.5vh;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--cc) 14%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fz_l1);
+  color: var(--cc);
+  flex-shrink: 0;
+  transition: background .3s, color .3s, transform .3s;
+}
+
+.ini_cat_card:hover .ini_cat_ico { background: var(--cc); color: #fff; transform: scale(1.1) rotate(-5deg); }
+
+.ini_cat_info h3 { font-size: var(--fz_m4); font-weight: 700; color: var(--tx); margin-bottom: .4vh; }
+.ini_cat_info p  { font-size: var(--fz_m1); color: var(--tx2); line-height: 1.5; margin: 0; }
+
+.ini_cat_tools { list-style: none; display: flex; flex-direction: column; gap: .7vh; }
+
+.ini_tool_a {
+  display: flex;
+  align-items: center;
+  gap: 1.2vh;
+  padding: 1vh 1.2vh;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  color: var(--tx);
+  transition: border-color .22s, background .22s, transform .22s;
+}
+
+.ini_tool_a:hover { border-color: var(--cc); background: color-mix(in srgb,var(--cc) 8%,var(--bg)); transform: translateX(5px); }
+.ini_tool_a > i:first-child { color: var(--cc); font-size: var(--fz_m3); width: 2.5vh; text-align: center; flex-shrink: 0; }
+.ini_tool_a strong { display: block; font-size: var(--fz_m2); font-weight: 600; }
+.ini_tool_a span   { font-size: var(--fz_s4); color: var(--tx2); }
+
+.ini_ext { margin-left: auto; font-size: var(--fz_s3); color: var(--tx3); opacity: 0; flex-shrink: 0; transition: opacity .2s, color .2s; }
+.ini_tool_a:hover .ini_ext { opacity: 1; color: var(--cc); }
+
+
+/* ── 12. ¿POR QUÉ WINWII? ─────────────────────────── */
+.ini_about_sec  { padding: 8vh 0; }
+
+.ini_about_grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3vw;
+}
+
+.ini_about_card {
+  background: var(--wb);
+  border-radius: 18px;
+  padding: 3vh 2.2vw;
+  border: 2px solid transparent;
+  transition: border-color var(--tr_m), box-shadow var(--tr_m), transform var(--tr_m);
+}
+
+.ini_about_card:hover {
+  border-color: var(--mco);
+  transform: translateY(-8px);
+  box-shadow: 0 14px 36px rgba(0,0,0,.14);
+}
+
+.ini_card_ico {
+  width: 58px;
+  height: 58px;
+  background: var(--bg4);
+  border-radius: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2vh;
+  color: var(--mco);
+  font-size: 1.7rem;
+  transition: background var(--tr_m), transform var(--tr_m);
+}
+
+.ini_about_card:hover .ini_card_ico { background: var(--bg5); transform: scale(1.08) rotate(-4deg); }
+.ini_about_card h3 { font-size: var(--fz_m5); font-weight: 700; color: var(--tx); margin-bottom: 1.2vh; }
+.ini_about_card p  { font-size: var(--fz_m2); color: var(--tx2); line-height: 1.8; margin: 0; }
+
+
+/* ── 13. CTA FINAL ────────────────────────────────── */
+.ini_cta_sec { padding: 8vh 0 4vh; }
+
+.ini_cta_wrap {
+  background: var(--wb);
+  border: 1px solid var(--brd);
+  border-radius: 22px;
+  padding: 5vh 4vw;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.2vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.ini_cta_wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, var(--bg5) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.ini_cta_ico {
+  font-size: var(--fz_y1);
+  color: var(--mco);
+  opacity: .15;
+  line-height: 1;
+  animation: ini_pulse 3.2s ease-in-out infinite;
+}
+
+.ini_cta_wrap h2  { font-size: var(--fz_x2); font-weight: 900; color: var(--tx); }
+.ini_cta_wrap > p { font-size: var(--fz_m3); color: var(--tx2); margin: 0; }
+
+.ini_cta_chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.2vh; }
+
+.ini_chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .8vh;
+  padding: .9vh 1.8vh;
+  background: var(--bg1);
+  backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in srgb, var(--cc) 35%, var(--brd));
+  border-radius: 50px;
+  font-size: var(--fz_m2);
+  font-weight: 600;
+  color: var(--tx);
+  text-decoration: none;
+  transition: background .25s, transform .25s, border-color .25s, box-shadow .25s;
+}
+
+.ini_chip i { color: var(--cc); }
+
+.ini_chip:hover {
+  background: color-mix(in srgb, var(--cc) 12%, var(--bg1));
+  border-color: var(--cc);
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.13);
+}
+
+.ini_cta_autor   { font-size: var(--fz_m1); color: var(--tx2); margin: 0; }
+.ini_cta_autor a { color: var(--mco); font-weight: 600; }
+
+
+/* ── 14. RESPONSIVE ───────────────────────────────── */
+@media (max-width: 1100px) {
+  .ini_hero               { grid-template-columns: 1fr; text-align: center; min-height: auto; gap: 4vh; padding-top: 2vh; }
+  .ini_hero_visual        { height: auto; padding-bottom: 0; }
+  .ini_sub                { max-width: 100%; margin: 0 auto 3.5vh auto; }
+  .ini_roles              { display: flex; justify-content: center; }
+  .ini_btns               { justify-content: center; }
+  .ini_stats              { grid-template-columns: repeat(2, 1fr); max-width: 500px; margin: 0 auto 3.5vh; }
+  .ini_about_grid         { grid-template-columns: 1fr; }
+  .ini_linkwii_preview    { max-width: 320px; margin: 0 auto; }
+}
+
+@media (max-width: 768px) {
+  .ini_ftech              { display: none; }
+  .ini_cats_grid          { grid-template-columns: 1fr; }
+  .ini_cta_wrap           { padding: 5vh 5vw; }
+  .ini_linkwii_preview    { max-width: 280px; }
+  .ini_btns               { flex-direction: column; align-items: center; }
+  .ini_btn_p, .ini_btn_s  { width: 100%; justify-content: center; }
+  .ini_about_grid         { gap: 2vh; }
+  .ini_cta_wrap h2        { font-size: var(--fz_x1); }
+}
+
+@media (max-width: 480px) {
+  .ini_titulo             { font-size: clamp(1.8rem, 8vw, 2.4rem); }
+  .ini_saludo             { font-size: var(--fz_m2); margin-bottom: 1vh; }
+  .ini_stats              { grid-template-columns: 1fr 1fr; gap: 1.5vh; }
+  .ini_roles              { height: auto; min-height: 4.5vh; }
+  .ini_sec_tit            { font-size: var(--fz_l2); }
+  .ini_linkwii_preview    { max-width: 260px; padding: 2.5vh 2vh; }
+  .ini_lw_avatar          { width: 65px; height: 65px; font-size: 1.5rem; margin-top: 1vh; }
+  .ini_lw_title           { font-size: 1.1rem; }
+  .ini_lw_bio             { font-size: 0.8rem; }
+}

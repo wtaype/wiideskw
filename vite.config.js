@@ -1,24 +1,31 @@
-import { defineConfig } from "vite";
-
-// @tauri-apps/api@2 está instalado como dependencia real.
-// NO se necesita alias — Vite lo resuelve desde node_modules.
-// El stub solo se usa en modo browser puro (invoke falla silenciosamente via try/catch).
+import { defineConfig } from 'vite';
 
 export default defineConfig({
-  root: ".",
-  base: "/",
-  optimizeDeps: {
-    // Excluir del pre-bundle de Vite dev — Tauri lo provee en runtime
-    exclude: ["@tauri-apps/api"],
-  },
-  build: {
-    outDir: "dist",
-    emptyOutDir: true,
-    // Sin external — @tauri-apps/api se bundlea normalmente
-  },
+  base: process.env.VITE_BASE || '/',
   server: {
     port: 1420,
-    strictPort: false,
-    open: true,
+    strictPort: true,
+    watch: { usePolling: true }
   },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    modulePreload: false,
+    rollupOptions: {
+      input: 'index.html',
+      output: {
+        manualChunks: id => {
+          if (id.includes('node_modules')) return id.includes('firebase') ? 'firebase' : 'vendor';
+        }
+      },
+      plugins: [{
+        name: 'minify-html',
+        generateBundle(_, b) {
+          for (let f in b) if (f.endsWith('.html') && b[f].type === 'asset') 
+            b[f].source = b[f].source.replace(/\n\s*/g, '').replace(/>\s+</g, '><').replace(/\s{2,}/g, ' ').replace(/<!--.*?-->/g, '').trim();
+        }
+      }]
+    }
+  },
+  publicDir: 'public'
 });

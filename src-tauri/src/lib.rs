@@ -1,199 +1,95 @@
-mod capture;
-mod input;
-mod server;
+// lib.rs — Orquestador central: registra todos los comandos Tauri expuestos al frontend
+pub mod tools;
 
-use std::net::IpAddr;
-use std::io::Write;
-
-fn debug_log(msg: &str) {
-    if let Ok(mut file) = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open("C:\\tmp\\wiidesk.log")
-    {
-        let _ = writeln!(file, "{}", msg);
-    }
-}
-
-// ── Obtener TODAS las IPs LAN disponibles ─────────────────────────────────
-fn get_all_lan_ips() -> Vec<String> {
-    let mut ips = Vec::new();
-
-    // local_ip_address::local_ip() devuelve solo la "principal"
-    // Usamos list_afinet_netifas para tener TODAS las interfaces
-    if let Ok(interfaces) = local_ip_address::list_afinet_netifas() {
-        for (_name, ip) in &interfaces {
-            if let IpAddr::V4(v4) = ip {
-                let s = v4.to_string();
-                // Filtrar loopback y APIPA
-                if !v4.is_loopback() && !v4.is_link_local() && !s.starts_with("169.") {
-                    ips.push(s);
-                }
-            }
-        }
-    }
-
-    // Fallback si no hay nada
-    if ips.is_empty() {
-        if let Ok(ip) = local_ip_address::local_ip() {
-            ips.push(ip.to_string());
-        }
-    }
-
-    ips
-}
-
-// ── Tauri Commands ────────────────────────────────────────────────────────
-
-/// Devuelve la IP principal (primera no-loopback IPv4)
+/// Lee la configuración del archivo wii.config.json
 #[tauri::command]
-fn get_lan_ip() -> String {
-    get_all_lan_ips()
-        .into_iter()
-        .next()
-        .unwrap_or_else(|| "192.168.1.x".to_string())
+fn obtener_config() -> Result<tools::config::json::WiiConfig, String> {
+    tools::config::json::cargar_configuracion().map_err(|e| e.to_string())
 }
 
-/// Devuelve TODAS las IPs disponibles para que el usuario elija
+/// Guarda la configuración actualizada en wii.config.json
 #[tauri::command]
-fn get_all_ips() -> Vec<String> {
-    get_all_lan_ips()
+fn guardar_config(config: tools::config::json::WiiConfig) -> Result<(), String> {
+    tools::config::json::guardar_configuracion(&config).map_err(|e| e.to_string())
 }
 
+/// Verifica si WoL está habilitado en el adaptador de red activo
 #[tauri::command]
-fn get_network_info() -> serde_json::Value {
-    let all_ips = get_all_lan_ips();
-    let primary = all_ips
-        .first()
-        .cloned()
-        .unwrap_or_else(|| "192.168.1.x".to_string());
-    serde_json::json!({
-        "ip": primary,
-        "all_ips": all_ips,
-        "port": 8765
-    })
+fn verificar_wol() -> Result<bool, String> {
+    tools::wol::verificar::esta_habilitado_wol().map_err(|e| e.to_string())
 }
 
+/// Activa WoL en el adaptador de red activo vía PowerShell
 #[tauri::command]
-async fn start_ws_server(port: u16, app: tauri::AppHandle) -> Result<String, String> {
-    match server::start(port, app).await {
-        Ok(msg) => Ok(msg),
-        Err(e) => Err(format!("Error al iniciar servidor: {}", e)),
-    }
+fn activar_wol() -> Result<(), String> {
+    tools::wol::verificar::activar_wol().map_err(|e| e.to_string())
 }
 
+/// Hashea y guarda el PIN en wii.config.json (PBKDF2-SHA256 + salt)
 #[tauri::command]
-async fn stop_ws_server() -> Result<(), String> {
-    server::stop();
-    Ok(())
+fn configurar_pin(pin: String) -> Result<(), String> {
+    let (salt_hex, hash_hex) = tools::config::hash::hashear_pin(&pin)
+        .map_err(|e| e.to_string())?;
+    let mut config = tools::config::json::cargar_configuracion()
+        .map_err(|e| e.to_string())?;
+    config.seguridad.pin_hash = hash_hex;
+    config.seguridad.pin_salt = salt_hex;
+    tools::config::json::guardar_configuracion(&config)
+        .map_err(|e| e.to_string())
 }
 
+/// Verifica el PIN ingresado contra el hash guardado
 #[tauri::command]
-fn get_server_status() -> bool {
-    server::is_running()
+fn verificar_pin_cmd(pin: String) -> Result<bool, String> {
+    let config = tools::config::json::cargar_configuracion()
+        .map_err(|e| e.to_string())?;
+    Ok(tools::config::hash::verificar_pin(
+        &pin,
+        &config.seguridad.pin_salt,
+        &config.seguridad.pin_hash,
+    ))
 }
 
-/// Agrega regla de Firewall de Windows para el puerto WebSocket
-/// Intenta sin elevar; si falla, devuelve el comando para ejecutar manualmente
+/// Suspende el equipo Windows
 #[tauri::command]
-fn setup_firewall(port: u16) -> String {
-    #[cfg(windows)]
-    {
-        // Primero verificar si la regla ya existe
-        let check = std::process::Command::new("netsh")
-            .args([
-                "advfirewall",
-                "firewall",
-                "show",
-                "rule",
-                "name=WiiDesk-WebSocket",
-            ])
-            .output();
+fn suspender_equipo() -> Result<(), String> {
+    tools::power::win32::suspender_pc().map_err(|e| e.to_string())
+}
 
-        if let Ok(o) = &check {
-            if o.status.success() && !o.stdout.is_empty() {
-                let out = String::from_utf8_lossy(&o.stdout);
-                if out.contains(&port.to_string()) {
-                    return format!("Regla de firewall ya existe para puerto {}", port);
-                }
-            }
-        }
+/// Apaga el equipo Windows
+#[tauri::command]
+fn apagar_equipo() -> Result<(), String> {
+    tools::power::win32::apagar_pc().map_err(|e| e.to_string())
+}
 
-        // Intentar agregar la regla
-        let result = std::process::Command::new("netsh")
-            .args([
-                "advfirewall",
-                "firewall",
-                "add",
-                "rule",
-                "name=WiiDesk-WebSocket",
-                "dir=in",
-                "action=allow",
-                "protocol=TCP",
-                &format!("localport={}", port),
-                "enable=yes",
-                "profile=any",
-            ])
-            .output();
+/// Inyecta texto en el sistema vía Win32 SendInput
+#[tauri::command]
+fn inyectar_teclado(texto: String) -> Result<(), String> {
+    tools::input::win32::escribir_texto(&texto).map_err(|e| e.to_string())
+}
 
-        match result {
-            Ok(o) if o.status.success() => {
-                format!("Firewall configurado: puerto {} permitido", port)
-            }
-            _ => {
-                // Devolver comando para ejecucion manual como admin
-                format!(
-                    "MANUAL:netsh advfirewall firewall add rule name=\"WiiDesk-WebSocket\" dir=in action=allow protocol=TCP localport={} enable=yes",
-                    port
-                )
-            }
-        }
-    }
-    #[cfg(not(windows))]
-    {
-        format!("Puerto {} habilitado (no Windows)", port)
-    }
+/// Inyecta un clic del mouse en coordenadas relativas (0.0 a 1.0)
+#[tauri::command]
+fn inyectar_click(x: f32, y: f32, boton: String) -> Result<(), String> {
+    tools::input::win32::clic_en(x, y, &boton).map_err(|e| e.to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .setup(|app| {
-            debug_log("[WiiDesk] setup iniciado");
-            let app_handle = app.handle().clone();
-            std::thread::spawn(move || {
-                debug_log("[WiiDesk] hilo servidor iniciado");
-                let Ok(rt) = tokio::runtime::Builder::new_multi_thread()
-                    .enable_all()
-                    .build()
-                else {
-                    debug_log("[WiiDesk] fallo creando runtime");
-                    eprintln!("[WiiDesk] No se pudo crear runtime del servidor");
-                    return;
-                };
-
-                rt.block_on(async move {
-                    debug_log("[WiiDesk] intentando start server 8765");
-                    if let Err(e) = server::start(8765, app_handle).await {
-                        debug_log(&format!("[WiiDesk] error start server: {}", e));
-                        eprintln!("[WiiDesk] No se pudo iniciar el servidor automatico: {}", e);
-                        return;
-                    }
-                    debug_log("[WiiDesk] server start ok");
-                    std::future::pending::<()>().await;
-                });
-            });
-            Ok(())
-        })
+        .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
-            get_lan_ip,
-            get_all_ips,
-            get_network_info,
-            start_ws_server,
-            stop_ws_server,
-            get_server_status,
-            setup_firewall,
+            obtener_config,
+            guardar_config,
+            verificar_wol,
+            activar_wol,
+            configurar_pin,
+            verificar_pin_cmd,
+            suspender_equipo,
+            apagar_equipo,
+            inyectar_teclado,
+            inyectar_click
         ])
         .run(tauri::generate_context!())
-        .expect("error while running WiiDesk");
+        .expect("error al iniciar wiidesk");
 }

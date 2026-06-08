@@ -1,0 +1,286 @@
+/* =========================================================================
+   SMILE.CSS — WiiHope Dashboard v2 (Two Columns)
+   ========================================================================= */
+
+@keyframes smw_entry {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes smw_fall {
+  0% { opacity: 0; transform: translateY(-25px) rotateX(-5deg); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0) rotateX(0); filter: blur(0); }
+}
+
+.smw_dash {
+  width: 100%;
+  min-height: 100vh;
+  padding: 2vh 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3vh;
+}
+
+/* ── HERO ── */
+.smw_hero {
+  position: relative;
+  width: 100%;
+  padding: 3.5vh 4vw;
+  background: var(--wb);
+  border-radius: 2.5vh;
+  border: 1px solid var(--brd);
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+}
+
+.smw_hero_glow {
+  position: absolute;
+  top: -20%; right: -10%; width: 40%; height: 140%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--mco) 15%, transparent) 0%, transparent 70%);
+  filter: blur(60px); z-index: 0;
+}
+
+.smw_hero_content {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between; gap: 3vh;
+}
+
+.smw_hero_left { display: flex; align-items: center; gap: 3vh; }
+.smw_avatar_wrap { position: relative; width: 9vh; height: 9vh; }
+.smw_avatar {
+  width: 100%; height: 100%; background: var(--mco); color: var(--bg);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: var(--fz_m4); font-weight: 800;
+}
+.smw_avatar_ring {
+  position: absolute; top: -6px; left: -6px; right: -6px; bottom: -6px;
+  border: 2.5px solid var(--mco); border-radius: 50%; opacity: 0.4;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--mco) 30%, transparent));
+}
+
+.smw_welcome h1 { font-size: var(--fz_l1); font-weight: 800; color: var(--tx); letter-spacing: -1px; }
+.smw_welcome h1 strong { color: var(--mco); }
+.smw_welcome p { font-size: var(--fz_s2); color: var(--tx3); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+.smw_hero_quote {
+  background: var(--bg5); padding: 2vh 3vh; border-radius: 2vh;
+  display: flex; gap: 2vh; align-items: flex-start; max-width: 450px; border: 1px solid var(--brd);
+}
+.smw_hero_quote i { font-size: var(--fz_m3); color: var(--mco); opacity: 0.5; }
+.smw_quote_body p { font-size: var(--fz_m2); font-weight: 600; color: var(--tx); line-height: 1.4; font-style: italic; }
+.smw_quote_body span { font-size: var(--fz_s2); color: var(--tx3); font-weight: 700; margin-top: 1vh; display: block; }
+
+/* ── TWO COLUMNS ── */
+.smw_main {
+  display: grid;
+  grid-template-columns: 2.5fr 1.2fr;
+  gap: 3vh;
+}
+
+.smw_col {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5vh;
+}
+
+.smw_sec_head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1vh;
+}
+.smw_sec_info h2 { font-size: var(--fz_m3); font-weight: 800; color: var(--tx); letter-spacing: -0.5px; display: flex; align-items: center; gap: 1.5vh; }
+.smw_sec_info h2 i { color: var(--mco); }
+.smw_sec_info p { font-size: var(--fz_s2); color: var(--tx3); font-weight: 500; }
+
+.smw_add_btn {
+  width: 5vh; height: 5vh; background: var(--wb); border: 1px solid var(--brd);
+  border-radius: 1.5vh; display: flex; align-items: center; justify-content: center;
+  color: var(--tx); text-decoration: none; transition: 0.3s;
+}
+.smw_add_btn:hover { background: var(--tx); color: white; transform: rotate(90deg); }
+
+/* ── PHRASES LIST (Left) ── */
+.smw_phrases_list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5vh;
+}
+
+.smw_phrase_card {
+  background: var(--wb); border: 1px solid var(--brd);
+  padding: 2.5vh; border-radius: 2vh;
+  display: flex; gap: 2vh; align-items: center;
+  animation: smw_fall 0.8s both;
+  transition: 0.3s;
+}
+.smw_phrase_card:hover { transform: translateX(8px); border-color: var(--tx3); }
+
+.smw_phrase_ico {
+  width: 5vh; height: 5vh; background: var(--bg5);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 1.2vh; color: var(--mco); font-size: var(--fz_m1);
+}
+
+.smw_phrase_body p { font-size: var(--fz_m2); font-weight: 600; color: var(--tx); line-height: 1.3; }
+.smw_phrase_body span { font-size: var(--fz_s1); color: var(--tx3); font-weight: 700; text-transform: uppercase; }
+
+/* ── BLOGS FEED (Right) ── */
+.smw_blogs_feed {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2vh;
+}
+
+.smw_blog_item {
+  display: flex; gap: 2.5vh; background: var(--wb);
+  border: 1px solid var(--brd); padding: 2vh; border-radius: 2.2vh;
+  text-decoration: none; transition: 0.4s;
+  animation: smw_entry 0.6s both;
+}
+.smw_blog_item:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(0,0,0,0.03); border-color: var(--tx2); }
+
+.smw_blog_img {
+  width: 14vh; height: 11vh; min-width: 14vh;
+  background-size: cover; background-position: center;
+  border-radius: 1.5vh;
+}
+
+.smw_blog_info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.smw_blog_info h4 { font-size: var(--fz_m2); font-weight: 800; color: var(--tx); margin-bottom: 1vh; line-height: 1.2; }
+.smw_blog_meta { display: flex; gap: 2vh; }
+.smw_blog_meta span { font-size: var(--fz_s2); color: var(--tx3); font-weight: 600; display: flex; align-items: center; gap: 0.8vh; }
+.smw_blog_meta i { color: var(--mco); font-size: 10px; }
+
+/* ── EMPTY & RESPONSIVE ── */
+.smw_empty { text-align: center; padding: 6vh 0; color: var(--tx3); }
+.smw_empty i { font-size: var(--fz_l1); opacity: 0.1; margin-bottom: 1.5vh; }
+.smw_empty p { font-size: var(--fz_m1); font-weight: 600; }
+
+@media (max-width: 1024px) {
+  .smw_main { grid-template-columns: 1fr; }
+  .smw_hero_content { flex-direction: column; align-items: flex-start; }
+  .smw_hero_quote { max-width: 100%; width: 100%; }
+  .smw_phrases_list { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .smw_blog_item { flex-direction: column; }
+  .smw_blog_img { width: 100%; height: 18vh; }
+}
+
+/* ── QUICK NAV CARDS (Dashboard) ── */
+.smw_quick_nav {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 2vh;
+  padding: 0 0 2vh;
+}
+
+.smw_qcard {
+  display: flex;
+  align-items: center;
+  gap: 2.5vh;
+  padding: 2.5vh 3vh;
+  background: var(--wb);
+  border: 1px solid var(--brd);
+  border-radius: 2vh;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  animation: smw_entry 0.6s both;
+  position: relative;
+  overflow: hidden;
+}
+.smw_qcard::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--qc);
+  border-radius: 4px 0 0 4px;
+}
+.smw_qcard:hover {
+  transform: translateY(-6px) translateX(4px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.06);
+  border-color: var(--qc);
+}
+
+.smw_qcard_ico {
+  width: 6.5vh;
+  height: 6.5vh;
+  border-radius: 1.5vh;
+  background: color-mix(in srgb, var(--qc) 12%, transparent);
+  color: var(--qc);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fz_m3);
+  flex-shrink: 0;
+}
+
+.smw_qcard_txt { flex: 1; }
+.smw_qcard_txt strong { display: block; font-size: var(--fz_m2); font-weight: 800; color: var(--tx); }
+.smw_qcard_txt span { font-size: var(--fz_s2); color: var(--tx3); font-weight: 500; }
+
+.smw_qcard_arr { color: var(--brd); transition: all 0.3s; }
+.smw_qcard:hover .smw_qcard_arr { color: var(--qc); transform: translateX(4px); }
+
+/* ── KPI BAND (hero) ── */
+.smw_kpi_band {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 3vh;
+  background: var(--wb);
+  border: 1px solid var(--brd);
+  border-radius: 2vh;
+  padding: 2.5vh 4vh;
+  backdrop-filter: blur(8px);
+}
+
+.smw_kpi_item { text-align: center; flex: 1; }
+.smw_kpi_val {
+  display: block;
+  font-size: var(--fz_l1);
+  font-weight: 900;
+  font-family: var(--ff_O);
+  line-height: 1;
+}
+.smw_kpi_lbl {
+  display: block;
+  font-size: var(--fz_s1);
+  color: var(--tx3);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 0.5vh;
+}
+.smw_kpi_sep {
+  width: 1px;
+  height: 4vh;
+  background: var(--brd);
+}
+
+.smw_month_selector_container {
+  display: flex;
+  align-items: center;
+}
+
+/* ── SKELETON LOADERS (Dashboard Refinements) ── */
+@keyframes smw_shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.smw_sk_kpi {
+  display: inline-block;
+  width: 60px;
+  height: 3.5vh;
+  border-radius: 1vh;
+  vertical-align: middle;
+  background: linear-gradient(90deg, var(--bg3) 25%, var(--bg5) 50%, var(--bg3) 75%);
+  background-size: 200% 100%;
+  animation: smw_shimmer 1.4s infinite;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.01);
+}
+

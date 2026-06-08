@@ -1,0 +1,335 @@
+/* ═══════════════════════════════════════════════════════════
+   ADMIN.CSS — CumpleWii · Centro de Control
+   ═══════════════════════════════════════════════════════════ */
+.am_page {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5vh;
+  animation: amFade .4s cubic-bezier(.2, .8, .2, 1);
+  width: 100%;
+  padding-bottom: 4vh;
+}
+@keyframes amFade {
+  from { opacity: 0; transform: translateY(15px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── HERO ────────────────────────────────────────────────── */
+.am_hero {
+  background: linear-gradient(135deg, #020617 0%, #0f172a 60%, #1e1b4b 100%);
+  border-radius: 2vh;
+  padding: 4.5vh 4vw;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3vh;
+  box-shadow: 0 1.5vh 4vh rgba(2,6,23,0.4);
+  position: relative;
+  overflow: hidden;
+  color: #f8fafc;
+  border: 1px solid rgba(255,255,255,0.07);
+}
+/* Glow detrás */
+.am_hero::before {
+  content: ''; position: absolute; right: -4vh; top: -4vh;
+  width: 40vh; height: 40vh;
+  background: radial-gradient(circle at center, rgba(245,158,11,0.18) 0%, rgba(139,92,246,0.12) 40%, transparent 70%);
+  pointer-events: none;
+}
+/* Shimmer animado */
+.am_hero::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.03) 50%, transparent 60%);
+  background-size: 200% 100%;
+  animation: amShimmer 4s linear infinite;
+  pointer-events: none;
+}
+@keyframes amShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.am_hero_left {
+  display: flex; align-items: center; gap: 3vh;
+  position: relative; z-index: 1; flex: 1; min-width: 0;
+}
+.am_hero_icon {
+  width: 9vh; height: 9vh; border-radius: 2.5vh;
+  background: rgba(245,158,11,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 4vh; color: #fbbf24; flex-shrink: 0;
+  border: 1px solid rgba(245,158,11,0.3);
+  box-shadow: 0 0 4vh rgba(245,158,11,0.2);
+}
+.am_hero_txt { flex: 1; display: flex; flex-direction: column; gap: 0.5vh; min-width: 0; }
+.am_badge {
+  display: inline-flex; align-items: center; gap: 0.6vh;
+  padding: 0.4vh 1.2vh; border-radius: 1vh; align-self: flex-start;
+  background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3);
+  font-size: var(--fz_s4); font-weight: 800; color: #fcd34d;
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5vh;
+}
+.am_hero_title {
+  font-family: var(--ff_G, sans-serif); font-size: var(--fz_l3);
+  font-weight: 800; margin: 0; line-height: 1.1;
+}
+.am_hero_sub {
+  font-size: var(--fz_m1); color: #94a3b8; margin: 0; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.am_hero_sub strong { color: #fbbf24; font-weight: 700; }
+
+.am_hero_right {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: 1.5vh; flex-shrink: 0;
+}
+.am_hero_meta {
+  display: flex; gap: 1vh; flex-wrap: wrap; justify-content: flex-end;
+}
+.am_hero_tag {
+  font-size: var(--fz_s4); font-weight: 700; color: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  padding: 0.3vh 1.2vh; border-radius: 1vh;
+  display: flex; align-items: center; gap: 0.5vh;
+}
+.am_btn_sync {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  color: #020617; border: none; border-radius: 1.2vh;
+  padding: 1.4vh 3vh; font-size: var(--fz_m1); font-weight: 800; cursor: pointer;
+  transition: all 0.2s; box-shadow: 0 1vh 2.5vh rgba(245,158,11,0.35);
+  display: flex; align-items: center; gap: 0.8vh; white-space: nowrap;
+}
+.am_btn_sync:hover {
+  transform: translateY(-0.3vh);
+  box-shadow: 0 1.5vh 4vh rgba(245,158,11,0.45);
+}
+
+/* ── SECTION TITLE ───────────────────────────────────────── */
+.am_kpi_section_title, .am_sec_header {
+  display: flex; align-items: center; gap: 1.2vh;
+  font-size: var(--fz_m2); font-weight: 800; color: var(--tx); margin: 0;
+}
+.am_kpi_section_title { margin-top: 0.5vh; }
+.am_kpi_section_title i, .am_sec_header i { font-size: var(--fz_m3); color: #f59e0b; }
+.am_sec_h2 { font-size: var(--fz_m3); font-weight: 800; color: var(--tx); margin: 0; }
+
+/* ── KPIs GRID — 6 columnas ──────────────────────────────── */
+.am_grid_6 {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2vh;
+}
+.am_kpi {
+  background: var(--wb); border: 1px solid var(--brd); border-radius: 2vh;
+  padding: 2.5vh 2vh; display: flex; flex-direction: column; gap: 1.5vh;
+  box-shadow: 0 1vh 2vh var(--bg5); transition: all 0.25s;
+  position: relative; overflow: hidden; cursor: default;
+}
+.am_kpi:hover { transform: translateY(-0.5vh); box-shadow: 0 1.5vh 4vh var(--bg5); }
+.am_kpi::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--c); opacity: 0.85;
+}
+.am_kpi::after {
+  content: ''; position: absolute; top: -2vh; right: -2vh;
+  width: 10vh; height: 10vh;
+  background: radial-gradient(circle at center, color-mix(in srgb, var(--c) 8%, transparent), transparent 70%);
+  pointer-events: none;
+}
+
+.am_kpi_head { display: flex; align-items: center; gap: 1.2vh; }
+.am_ki_ico {
+  width: 5vh; height: 5vh; border-radius: 1.2vh;
+  background: color-mix(in srgb, var(--c) 14%, transparent);
+  color: var(--c); display: flex; align-items: center; justify-content: center;
+  font-size: 2vh; flex-shrink: 0;
+}
+.am_ki_label { font-size: var(--fz_s4); font-weight: 800; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.05em; }
+.am_ki_val {
+  font-family: var(--ff_G, sans-serif); font-size: var(--fz_l3);
+  font-weight: 800; color: var(--tx); line-height: 1;
+}
+.am_ki_trend { font-size: var(--fz_s4); font-weight: 600; color: var(--tx3); display: flex; align-items: center; gap: 0.5vh; }
+.am_ki_trend i { color: var(--c); }
+
+/* ── MÓDULOS ADMIN (3 × 2) ───────────────────────────────── */
+.am_actions_grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 2vh;
+}
+.am_act_card {
+  background: var(--wb); border: 1px solid var(--brd); border-radius: 1.8vh;
+  padding: 2.5vh; display: flex; align-items: flex-start; gap: 2vh;
+  text-decoration: none; transition: all 0.2s;
+  box-shadow: 0 0.5vh 2vh var(--bg5); position: relative; overflow: hidden;
+}
+.am_act_card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--c); opacity: 0; transition: opacity 0.2s;
+}
+.am_act_card:hover {
+  background: var(--bg4); border-color: color-mix(in srgb, var(--c) 35%, var(--brd));
+  transform: translateX(3px);
+  box-shadow: 0 1vh 3vh var(--bg5);
+}
+.am_act_card:hover::before { opacity: 1; }
+.am_act_ico {
+  width: 6vh; height: 6vh; border-radius: 1.5vh;
+  background: color-mix(in srgb, var(--c) 14%, transparent);
+  color: var(--c); display: flex; align-items: center; justify-content: center;
+  font-size: 2.5vh; flex-shrink: 0; transition: transform 0.2s;
+}
+.am_act_card:hover .am_act_ico { transform: scale(1.1); }
+.am_act_info { display: flex; flex-direction: column; gap: 0.5vh; }
+.am_act_info strong { font-size: var(--fz_m2); font-weight: 800; color: var(--tx); }
+.am_act_info span   { font-size: var(--fz_s4); color: var(--tx3); line-height: 1.3; }
+
+/* ── QUICK ACCESS (8 botones compactos) ──────────────────── */
+.am_quick_grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 1.5vh;
+}
+.am_quick_card {
+  background: var(--wb); border: 1px solid var(--brd); border-radius: 1.5vh;
+  padding: 2vh 1vh;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 0.8vh;
+  text-decoration: none; transition: all 0.2s;
+  box-shadow: 0 0.3vh 1vh var(--bg5); cursor: pointer;
+}
+.am_quick_card:hover {
+  background: var(--bg4); transform: translateY(-3px);
+  box-shadow: 0 1vh 2.5vh var(--bg5);
+  border-color: #f59e0b;
+}
+.am_quick_card i {
+  font-size: 2.5vh; color: #f59e0b; transition: transform 0.2s;
+}
+.am_quick_card:hover i { transform: scale(1.15); }
+.am_quick_card span {
+  font-size: var(--fz_s4); font-weight: 700; color: var(--tx3);
+  text-align: center; line-height: 1.2;
+}
+
+/* ── FOOTER INFO ─────────────────────────────────────────── */
+/* (Eliminado — el footer general del sitio ya cubre esto) */
+
+/* ── ESTADO PLATAFORMA — 3 cards ─────────────────────────── */
+.am_status_grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2vh;
+}
+.am_status_card {
+  background: var(--wb); border: 1px solid var(--brd); border-radius: 2vh;
+  padding: 2.5vh; display: flex; flex-direction: column; gap: 1.5vh;
+  box-shadow: 0 0.5vh 2vh var(--bg5);
+}
+.am_status_head {
+  display: flex; align-items: center; gap: 1vh;
+  font-size: var(--fz_s2); font-weight: 800; color: var(--tx);
+  border-bottom: 1px solid var(--brd); padding-bottom: 1.2vh;
+}
+.am_status_head i { color: #f59e0b; font-size: var(--fz_m1); }
+
+/* ── Collection list ─────────────────────────────────────── */
+.am_col_list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 0.8vh;
+}
+.am_col_list li {
+  display: flex; align-items: center; gap: 1vh;
+  font-size: var(--fz_s3);
+}
+.am_col_dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.am_col_list code {
+  font-family: monospace; font-size: var(--fz_s3);
+  color: var(--tx); font-weight: 700; flex: 1;
+  background: var(--bg5); padding: 0.15em 0.5em; border-radius: 0.4vh;
+}
+.am_col_list em {
+  font-style: normal; color: var(--tx3); font-size: var(--fz_s4);
+  white-space: nowrap;
+}
+
+/* ── Plan & Role bars ────────────────────────────────────── */
+.am_plan_bar { display: flex; flex-direction: column; gap: 1.1vh; }
+.am_plan_row {
+  display: flex; align-items: center; gap: 1vh;
+}
+.am_plan_lbl {
+  font-size: var(--fz_s4); font-weight: 700; color: var(--tx3);
+  width: 55px; flex-shrink: 0; text-align: right;
+}
+.am_plan_track {
+  flex: 1; height: 7px; background: var(--brd);
+  border-radius: 999px; overflow: hidden;
+}
+.am_plan_fill {
+  height: 100%; width: var(--w, 0%);
+  border-radius: 999px;
+  transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.am_plan_num {
+  font-size: var(--fz_s4); font-weight: 800; color: var(--tx);
+  width: 28px; text-align: right; flex-shrink: 0;
+}
+
+/* ── Info list ───────────────────────────────────────────── */
+.am_info_list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 0.85vh;
+}
+.am_info_list li {
+  display: grid;
+  grid-template-columns: 1.5em 1fr auto;
+  align-items: center; gap: 0.8vh;
+  font-size: var(--fz_s3);
+  padding-bottom: 0.75vh;
+  border-bottom: 1px solid var(--brd);
+}
+.am_info_list li:last-child { border-bottom: none; padding-bottom: 0; }
+.am_info_list i { color: #f59e0b; text-align: center; }
+.am_info_list span { color: var(--tx3); font-weight: 600; }
+.am_info_list strong { color: var(--tx); font-weight: 800; text-align: right; }
+.am_info_list a { color: #38bdf8; text-decoration: none; font-weight: 800; }
+.am_info_list a:hover { text-decoration: underline; }
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .am_status_grid { grid-template-columns: 1fr 1fr; }
+  .am_status_card:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .am_status_grid { grid-template-columns: 1fr; }
+  .am_status_card:last-child { grid-column: auto; }
+}
+
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .am_grid_6 { grid-template-columns: repeat(3, 1fr); }
+  .am_quick_grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 900px) {
+  .am_grid_6 { grid-template-columns: repeat(2, 1fr); }
+  .am_actions_grid { grid-template-columns: repeat(2, 1fr); }
+  .am_quick_grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 640px) {
+  .am_hero { flex-direction: column; align-items: stretch; }
+  .am_hero_right { align-items: stretch; }
+  .am_hero_meta { justify-content: flex-start; }
+  .am_hero_left { flex-direction: column; text-align: center; }
+  .am_hero_icon { align-self: center; }
+  .am_badge { align-self: center; }
+  .am_grid_6 { grid-template-columns: 1fr 1fr; }
+  .am_actions_grid { grid-template-columns: 1fr; }
+  .am_quick_grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 400px) {
+  .am_quick_grid { grid-template-columns: repeat(2, 1fr); }
+}
