@@ -1,6 +1,19 @@
 // lib.rs — Orquestador central: registra todos los comandos Tauri expuestos al frontend
 pub mod tools;
 
+#[tauri::command]
+fn abrir_navegador(url: String) -> Result<(), String> {
+    println!("--- [TAURI BACKEND] abrir_navegador invocado con URL: {} ---", url);
+    std::process::Command::new("cmd")
+        .args(&["/c", "start", "", &url])
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| {
+            println!("--- [TAURI BACKEND] Error al abrir navegador: {} ---", e);
+            e.to_string()
+        })
+}
+
 /// Lee la configuración del archivo wii.config.json
 #[tauri::command]
 fn obtener_config() -> Result<tools::config::json::WiiConfig, String> {
@@ -88,7 +101,8 @@ pub fn run() {
             suspender_equipo,
             apagar_equipo,
             inyectar_teclado,
-            inyectar_click
+            inyectar_click,
+            abrir_navegador
         ])
         .run(tauri::generate_context!())
         .expect("error al iniciar wiidesk");
