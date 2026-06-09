@@ -32,5 +32,12 @@
     "windows": {
       "wix": {}
     }
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["wiidesk"]
+      }
+    }
   }
 }

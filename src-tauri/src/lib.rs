@@ -89,8 +89,24 @@ fn inyectar_click(x: f32, y: f32, boton: String) -> Result<(), String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_shell::init())
+    let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init());
+
+    #[cfg(any(target_os = "macos", windows, target_os = "linux"))]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|_app, argv, _cwd| {
+            println!("Nueva instancia intentó abrirse con argumentos: {:?}", argv);
+        }));
+        builder = builder.plugin(tauri_plugin_deep_link::init());
+
+        use tauri_plugin_deep_link::DeepLinkExt;
+        builder = builder.setup(|app| {
+            app.deep_link().register_all()?;
+            Ok(())
+        });
+    }
+
+    builder
         .invoke_handler(tauri::generate_handler![
             obtener_config,
             guardar_config,
