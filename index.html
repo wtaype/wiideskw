@@ -545,9 +545,9 @@
     .wilogo {
       display: flex;
       align-items: center;
-      gap: 0.3vh;
-      font-size: var(--fz_m5);
-      font-weight: 700;
+      gap: 0.8vh;
+      font-size: var(--fz_m2);
+      font-weight: 600;
       color: var(--bg2);
       cursor: pointer;
       transition: all var(--tr_f)
@@ -558,12 +558,12 @@
     }
 
     .wilogo i {
-      font-size: var(--fz_l1)
+      font-size: inherit
     }
 
     .wilogo_img {
-      height: var(--fz_l1);
-      width: var(--fz_l1);
+      height: var(--fz_m2);
+      width: var(--fz_m2);
       object-fit: contain;
       border-radius: 0;
       display: inline-block;
@@ -1243,7 +1243,40 @@
     <div class="tema" data-ths="Futuro|#21273B"></div>
   </div>
 </body>
-<script>(() => { const d = document, h = d.documentElement, w = d.querySelector('#wiTema'); if (!w) return; const ts = [...w.querySelectorAll('.tema')], m = d.querySelector('meta[name="theme-color"]') || d.head.appendChild(Object.assign(d.createElement('meta'), { name: 'theme-color' })), st = t => { const [n, c] = t.dataset.ths.split('|'); h.dataset.theme = n; m.content = c; localStorage.wiTema = t.dataset.ths; ts.forEach(x => x.classList.toggle('mtha', x === t)) }; w.addEventListener('click', e => e.target.matches('.tema') && st(e.target), { passive: !0 }); const i = w.querySelector(`[data-ths="${localStorage.wiTema}"]`) || w.querySelector('.tema.mtha') || ts[3]; i && st(i) })();</script>
+<script>
+(() => {
+  const d = document, h = d.documentElement, w = d.querySelector('#wiTema');
+  if (!w) return;
+  const ts = [...w.querySelectorAll('.tema')],
+        m = d.querySelector('meta[name="theme-color"]') || d.head.appendChild(Object.assign(d.createElement('meta'), { name: 'theme-color' }));
+  
+  const coloresTema = {
+    Cielo: { bg: '#ccefff', tx: '#000000' },
+    Dulce: { bg: '#ffccd1', tx: '#000000' },
+    Paz: { bg: '#ccffce', tx: '#000000' },
+    Oro: { bg: '#fff8d1', tx: '#000000' },
+    Mora: { bg: '#e4ccff', tx: '#000000' },
+    Futuro: { bg: '#0a0e1a', tx: '#e0e7ff' }
+  };
+
+  const st = t => {
+    const [n, c] = t.dataset.ths.split('|');
+    h.dataset.theme = n;
+    m.content = c;
+    localStorage.wiTema = t.dataset.ths;
+    ts.forEach(x => x.classList.toggle('mtha', x === t));
+    
+    if (window.__TAURI__) {
+      const thColors = coloresTema[n] || coloresTema.Oro;
+      window.__TAURI__.core.invoke('cambiar_color_titulo', { bgHex: thColors.bg, txHex: thColors.tx }).catch(() => {});
+    }
+  };
+
+  w.addEventListener('click', e => e.target.matches('.tema') && st(e.target), { passive: !0 });
+  const i = w.querySelector(`[data-ths="${localStorage.wiTema}"]`) || w.querySelector('.tema.mtha') || ts[3];
+  i && st(i);
+})();
+</script>
 <script type="module" src="./src/main.js" defer></script>
 
 </html>

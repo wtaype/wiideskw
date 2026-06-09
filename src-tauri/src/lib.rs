@@ -4,14 +4,73 @@ pub mod tools;
 #[tauri::command]
 fn abrir_navegador(url: String) -> Result<(), String> {
     println!("--- [TAURI BACKEND] abrir_navegador invocado con URL: {} ---", url);
-    std::process::Command::new("cmd")
-        .args(&["/c", "start", "", &url])
-        .spawn()
+    let mut cmd = std::process::Command::new("cmd");
+    cmd.args(&["/c", "start", "", &url]);
+    
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+    
+    cmd.spawn()
         .map(|_| ())
         .map_err(|e| {
             println!("--- [TAURI BACKEND] Error al abrir navegador: {} ---", e);
             e.to_string()
         })
+}
+
+fn parse_hex_to_bgr(hex: &str) -> Option<u32> {
+    let hex = hex.trim().trim_start_matches('#');
+    if hex.len() != 6 {
+        return None;
+    }
+    let r = u32::from_str_radix(&hex[0..2], 16).ok()?;
+    let g = u32::from_str_radix(&hex[2..4], 16).ok()?;
+    let b = u32::from_str_radix(&hex[4..6], 16).ok()?;
+    Some(r | (g << 8) | (b << 16))
+}
+
+#[tauri::command]
+fn cambiar_color_titulo(window: tauri::Window, bg_hex: String, tx_hex: String) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        let hwnd = window.hwnd().map_err(|e| e.to_string())?;
+        let hwnd_isize = hwnd.0 as isize;
+        
+        let bg_color = parse_hex_to_bgr(&bg_hex).unwrap_or(0x00000000); // Negro por defecto
+        let tx_color = parse_hex_to_bgr(&tx_hex).unwrap_or(0x00FFFFFF); // Blanco por defecto
+
+        unsafe {
+            #[link(name = "dwmapi")]
+            extern "system" {
+                fn DwmSetWindowAttribute(
+                    hwnd: isize,
+                    dw_attribute: u32,
+                    pv_attribute: *const std::ffi::c_void,
+                    cb_attribute: u32,
+                ) -> i32;
+            }
+
+            // DWMWA_CAPTION_COLOR = 35
+            DwmSetWindowAttribute(
+                hwnd_isize,
+                35,
+                &bg_color as *const _ as *const std::ffi::c_void,
+                std::mem::size_of::<u32>() as u32,
+            );
+
+            // DWMWA_TEXT_COLOR = 36
+            DwmSetWindowAttribute(
+                hwnd_isize,
+                36,
+                &tx_color as *const _ as *const std::ffi::c_void,
+                std::mem::size_of::<u32>() as u32,
+            );
+        }
+    }
+    Ok(())
 }
 
 /// Lee la configuración del archivo wii.config.json
@@ -118,7 +177,8 @@ pub fn run() {
             apagar_equipo,
             inyectar_teclado,
             inyectar_click,
-            abrir_navegador
+            abrir_navegador,
+            cambiar_color_titulo
         ])
         .run(tauri::generate_context!())
         .expect("error al iniciar wiidesk");

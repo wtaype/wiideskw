@@ -124,7 +124,7 @@ class WiRutas {
 
     const noAuth = () => Promise.resolve({
       render: () => '',
-      init:   () => setTimeout(() => this.navigate('/login'), 0),
+      init:   () => setTimeout(() => this.navigate('/'), 0),
     });
 
     new Set([...Object.keys(pub), ...Object.keys(priv)]).forEach(path => {
