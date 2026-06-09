@@ -1,0 +1,466 @@
+/* ═══════════════════════════════════════════════════════════
+   📱 PC A MÓVIL (Client/Viewer Styles)
+   ═══════════════════════════════════════════════════════════ */
+
+.m2m_container {
+  width: 100%;
+  min-height: 90vh;
+  padding: 1rem;
+  animation: m2m_fade_in 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+  display: flex;
+  flex-direction: column;
+  gap: 3vh;
+}
+
+@keyframes m2m_fade_in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header */
+.m2m_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  background: var(--wb);
+  border: 1px solid var(--brd);
+  padding: 1.25rem 2rem;
+  border-radius: 1.2vh;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.m2m_title_section h2 {
+  font-size: var(--fz_m5);
+  font-weight: 800;
+  color: var(--tx1);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.m2m_title_section h2 i {
+  color: var(--Cielo);
+}
+
+.m2m_title_section p {
+  font-size: var(--fz_s4);
+  color: var(--tx3);
+  margin-top: 0.25rem;
+  margin-bottom: 0;
+}
+
+.m2m_status_indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg3);
+  padding: 0.6rem 1.25rem;
+  border-radius: 2rem;
+  border: 1px solid var(--brd);
+}
+
+.m2m_dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.m2m_dot.wd_status_inactivo { background: var(--tx3); box-shadow: 0 0 8px var(--tx3); }
+.m2m_dot.wd_status_conectando { background: var(--warning); box-shadow: 0 0 10px var(--warning); animation: m2m_pulse 1.2s infinite; }
+.m2m_dot.wd_status_conectado { background: var(--success); box-shadow: 0 0 12px var(--success); }
+.m2m_dot.wd_status_caido { background: var(--error); box-shadow: 0 0 10px var(--error); }
+
+.m2m_status_txt {
+  font-size: var(--fz_s4);
+  font-weight: 700;
+  color: var(--tx1);
+  letter-spacing: 0.5px;
+}
+
+/* Grid Layout */
+.m2m_grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1.35fr;
+  gap: 4vh;
+}
+
+@media (max-width: 1024px) {
+  .m2m_grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.m2m_card {
+  background: var(--bg6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--brd);
+  border-radius: 1.2vh;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.m2m_card h3 {
+  font-size: var(--fz_m3);
+  font-weight: 700;
+  color: var(--tx1);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.m2m_card h3 i {
+  color: var(--Cielo);
+}
+
+.m2m_card_subtitle {
+  font-size: var(--fz_s3);
+  color: var(--tx3);
+  margin-bottom: 1.5rem;
+}
+
+/* List of devices */
+.m2m_device_list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5vh;
+}
+
+.m2m_device_item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--wb);
+  border: 1px solid var(--brd);
+  border-radius: 0.8vh;
+  padding: 1.25rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.m2m_device_item:hover {
+  border-color: var(--Cielo);
+  transform: translateX(4px);
+}
+
+.m2m_device_item.active {
+  border-color: var(--Cielo);
+  background: var(--bg4);
+  box-shadow: 0 4px 15px rgba(14, 190, 255, 0.1);
+}
+
+.m2m_device_info_col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.m2m_device_info_col strong {
+  font-size: var(--fz_m1);
+  color: var(--tx1);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.m2m_device_info_col strong i {
+  color: var(--Cielo);
+}
+
+.m2m_device_info_col span {
+  font-size: var(--fz_s3);
+  color: var(--tx3);
+}
+
+.m2m_status_badge {
+  font-size: var(--fz_s3);
+  font-weight: 700;
+  padding: 0.4vh 1vh;
+  border-radius: 1.5vh;
+  text-transform: uppercase;
+}
+
+.m2m_status_badge.m2m_badge_online {
+  background: rgba(60, 215, 65, 0.12);
+  color: var(--success);
+  border: 1px solid rgba(60, 215, 65, 0.25);
+}
+
+.m2m_status_badge.m2m_badge_offline {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--tx3);
+  border: 1px solid var(--brd);
+}
+
+/* Settings Column */
+.m2m_col_left {
+  display: flex;
+  flex-direction: column;
+  gap: 3vh;
+}
+
+.m2m_settings {
+  display: flex;
+  flex-direction: column;
+  gap: 2vh;
+}
+
+.m2m_setting_row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px dashed var(--brd);
+  padding-bottom: 1.5vh;
+}
+
+.m2m_setting_row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.m2m_setting_row label {
+  font-size: var(--fz_m1);
+  font-weight: 600;
+  color: var(--tx2);
+}
+
+.m2m_setting_row select {
+  width: 60%;
+}
+
+/* VISOR MÓVIL EMULADO (Smartphone frame) */
+.m2m_viewer_card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg6);
+  padding: 3vh;
+  min-height: 550px;
+}
+
+.m2m_phone_wrapper {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.m2m_phone_wrapper.portrait {
+  width: 280px;
+  height: 560px;
+}
+
+.m2m_phone_wrapper.landscape {
+  width: 560px;
+  height: 280px;
+  transform: rotate(0deg); /* Controlado por clases para no descolocar layouts */
+}
+
+/* El chasis de celular */
+.m2m_phone_frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #0f172a;
+  border: 10px solid #334155;
+  border-radius: 36px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Notch */
+.m2m_phone_notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 18px;
+  background: #334155;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  z-index: 10;
+}
+
+.m2m_phone_wrapper.landscape .m2m_phone_notch {
+  display: none; /* Ocultar en horizontal */
+}
+
+/* Pantalla del Celular */
+.m2m_phone_screen {
+  flex: 1;
+  position: relative;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Offline state */
+.m2m_screen_offline, .m2m_screen_loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  color: var(--tx3);
+  z-index: 5;
+}
+
+.m2m_screen_offline i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.2;
+}
+
+.m2m_screen_offline span {
+  font-size: var(--fz_m2);
+  font-weight: 700;
+  color: var(--tx2);
+  margin-bottom: 0.5rem;
+}
+
+.m2m_screen_offline p {
+  font-size: var(--fz_s3);
+  color: var(--tx3);
+}
+
+.m2m_screen_loading i {
+  font-size: 2.5rem;
+  color: var(--Cielo);
+  margin-bottom: 1rem;
+}
+
+.m2m_screen_loading span {
+  font-size: var(--fz_s4);
+  color: var(--Cielo);
+}
+
+/* Video streaming interface simulator */
+.m2m_screen_video_wrap {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  cursor: crosshair;
+}
+
+.m2m_mobile_ui_mockup {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #090d16 0%, #151b2e 100%);
+  padding: 12px;
+}
+
+.m2m_phone_wrapper.landscape .m2m_mobile_ui_mockup {
+  padding: 6px 12px;
+}
+
+.m2m_mockup_topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #fff;
+  font-size: 9px;
+  opacity: 0.8;
+  margin-top: 6px;
+}
+
+.m2m_topbar_icons {
+  display: flex;
+  gap: 4px;
+}
+
+.m2m_mockup_content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5vh;
+}
+
+.m2m_mockup_logo {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 1px solid var(--Cielo);
+  box-shadow: 0 0 10px rgba(14, 190, 255, 0.4);
+}
+
+.m2m_mockup_content h4 {
+  font-size: var(--fz_m2);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.m2m_mockup_status {
+  font-size: 9px;
+  background: rgba(41, 199, 46, 0.15);
+  color: var(--success);
+  border: 1px solid rgba(41, 199, 46, 0.3);
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+
+.m2m_mockup_chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 30px;
+  margin: 1vh 0;
+}
+
+.m2m_mockup_chart .bar {
+  width: 6px;
+  background: var(--Cielo);
+  border-radius: 2px;
+  opacity: 0.75;
+}
+
+.m2m_mockup_stats {
+  font-size: 8px;
+  color: var(--tx3);
+  font-family: monospace;
+}
+
+/* Hardware Buttons simulation (Back, Home, Recents) */
+.m2m_phone_hardware {
+  height: 38px;
+  background: #1e293b;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1px solid #334155;
+  padding: 0 20px;
+}
+
+.m2m_hw_btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 13px;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+  padding: 0;
+}
+
+.m2m_hw_btn:hover {
+  color: #fff;
+}
