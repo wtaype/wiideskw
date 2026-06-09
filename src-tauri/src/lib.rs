@@ -4,21 +4,53 @@ pub mod tools;
 #[tauri::command]
 fn abrir_navegador(url: String) -> Result<(), String> {
     println!("--- [TAURI BACKEND] abrir_navegador invocado con URL: {} ---", url);
-    let mut cmd = std::process::Command::new("cmd");
-    cmd.args(&["/c", "start", "", &url]);
-    
     #[cfg(target_os = "windows")]
     {
-        use std::os::windows::process::CommandExt;
-        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+        use std::os::windows::ffi::OsStrExt;
+        let url_wide: Vec<u16> = std::ffi::OsStr::new(&url)
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
+        let operation_wide: Vec<u16> = std::ffi::OsStr::new("open")
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
+            
+        unsafe {
+            #[link(name = "shell32")]
+            extern "system" {
+                fn ShellExecuteW(
+                    hwnd: isize,
+                    lp_operation: *const u16,
+                    lp_file: *const u16,
+                    lp_parameters: *const u16,
+                    lp_directory: *const u16,
+                    n_show_cmd: i32,
+                ) -> isize;
+            }
+            let result = ShellExecuteW(
+                0,
+                operation_wide.as_ptr(),
+                url_wide.as_ptr(),
+                std::ptr::null(),
+                std::ptr::null(),
+                1, // SW_SHOWNORMAL = 1
+            );
+            if result > 32 {
+                Ok(())
+            } else {
+                Err(format!("Error al ejecutar ShellExecuteW: {}", result))
+            }
+        }
     }
-    
-    cmd.spawn()
-        .map(|_| ())
-        .map_err(|e| {
-            println!("--- [TAURI BACKEND] Error al abrir navegador: {} ---", e);
-            e.to_string()
-        })
+    #[cfg(not(target_os = "windows"))]
+    {
+        std::process::Command::new("open")
+            .arg(url)
+            .spawn()
+            .map(|_| ())
+            .map_err(|e| e.to_string())
+    }
 }
 
 fn parse_hex_to_bgr(hex: &str) -> Option<u32> {
@@ -153,16 +185,20 @@ pub fn run() {
 
     #[cfg(any(target_os = "macos", windows, target_os = "linux"))]
     {
-        builder = builder.plugin(tauri_plugin_single_instance::init(|_app, argv, _cwd| {
-            println!("Nueva instancia intentó abrirse con argumentos: {:?}", argv);
-        }));
-        builder = builder.plugin(tauri_plugin_deep_link::init());
-
-        use tauri_plugin_deep_link::DeepLinkExt;
-        builder = builder.setup(|app| {
-            app.deep_link().register_all()?;
-            Ok(())
-        });
+        builder = builder
+            .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+                use tauri::{Emitter, Manager};
+                let _ = app.emit("deep-link://new-url", argv);
+                if let Some(w) = app.get_webview_window("main") {
+                    let _ = w.set_focus();
+                }
+            }))
+            .plugin(tauri_plugin_deep_link::init())
+            .setup(|app| {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                let _ = app.deep_link().register_all();
+                Ok(())
+            });
     }
 
     builder
