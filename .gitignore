@@ -53,3 +53,8 @@ skills-lock.json
 
 # Tauri/Rust
 src-tauri/target/
+
+# Credenciales y configuraciones locales adicionales
+.env.json
+google-services.json
+local.properties

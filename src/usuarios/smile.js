@@ -56,15 +56,15 @@ export const render = () => {
     // Shimmer skeletons
     htmlHosts = `
       <div class="wd_skeleton_card"></div>
-      <div class="wd_skeleton_card" style="animation-delay: 0.2s;"></div>
-      <div class="wd_skeleton_card" style="animation-delay: 0.4s;"></div>
+      <div class="wd_skeleton_card"></div>
+      <div class="wd_skeleton_card"></div>
     `;
   } else if (hostsRemotos.length === 0) {
     htmlHosts = `
       <div class="ad_empty">
         <i class="fa-solid fa-network-wired"></i>
         <p>No tienes otros equipos vinculados</p>
-        <span style="font-size: var(--fz_s3); color: var(--tx3);">Vincula este equipo desde la App móvil usando el código QR.</span>
+        <span class="wd_empty_note">Vincula este equipo desde la App móvil usando el código QR.</span>
       </div>
     `;
   } else {
@@ -73,7 +73,7 @@ export const render = () => {
       const badgeClass = esOnline ? 'wd_badge_online' : 'wd_badge_offline';
       const badgeTexto = esOnline ? 'En Línea' : 'Desconectado';
       const icoClass = esOnline ? 'wd_device_ico_online' : 'wd_device_ico_offline';
-      const wolBtnAttr = esOnline ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+      const wolBtnAttr = esOnline ? 'disabled class="wd_btn_disabled"' : '';
       
       return `
         <div class="wd_device_card">
@@ -84,7 +84,7 @@ export const render = () => {
             <div class="wd_device_info">
               <strong>${h.alias || h.dispositivoNombre || 'Equipo Sin Nombre'}</strong>
               <span>IP: ${h.localIp || '—'} | MAC: ${h.macAddress || '—'}</span>
-              <div style="margin-top: 0.8vh;">
+              <div class="wd_device_badge_container">
                 <span class="wd_badge ${badgeClass}">${badgeTexto}</span>
               </div>
             </div>
@@ -137,7 +137,7 @@ export const render = () => {
               </div>
               <div class="wd_host_row">
                 <span class="wd_host_label">Dirección MAC:</span>
-                <span class="wd_host_val" id="local-mac" style="cursor: pointer;" title="Copiar MAC">${configLocal.mac_address}</span>
+                <span class="wd_host_val wd_host_mac" id="local-mac" title="Copiar MAC">${configLocal.mac_address}</span>
               </div>
               <div class="wd_host_row">
                 <span class="wd_host_label">Estado Wake-on-LAN:</span>
@@ -153,12 +153,12 @@ export const render = () => {
               </div>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 2vh;">
+            <div class="wd_local_actions">
               <button class="wd_btn wd_btn_primary" id="btn-toggle-wol">
                 <i class="fa-solid fa-wand-magic-sparkles"></i> Activar WoL Automático
               </button>
               
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2vh;">
+              <div class="wd_local_actions_grid">
                 <button class="wd_btn wd_btn_secondary" id="btn-suspender-local">
                   <i class="fa-solid fa-moon"></i> Suspender PC
                 </button>
@@ -170,12 +170,12 @@ export const render = () => {
 
             <!-- VINCULACIÓN CON CELULAR (DIRECTA POR FIRESTORE) -->
             <div class="wd_pairing_box">
-              <h3 style="font-size: var(--fz_m2); font-weight: 700; color: var(--tx1);">Control Celular</h3>
-              <p style="font-size: var(--fz_s2); color: var(--tx3); text-align: center; margin-bottom: 2vh;">
+              <h3 class="wd_pairing_title">Control Celular</h3>
+              <p class="wd_pairing_desc">
                 Registra este equipo en la nube para poder encenderlo, apagarlo o suspenderlo directamente desde la aplicación móvil de Wiidesk.
               </p>
               
-              <button class="wd_btn ${controlCelularHabilitado ? 'wd_btn_danger' : 'wd_btn_primary'}" id="btn-crear-control-celular" style="width: 100%;">
+              <button class="wd_btn ${controlCelularHabilitado ? 'wd_btn_danger' : 'wd_btn_primary'} wd_pairing_btn" id="btn-crear-control-celular">
                 <i class="fa-solid ${controlCelularHabilitado ? 'fa-link-slash' : 'fa-mobile-screen-button'}"></i> 
                 <span>${controlCelularHabilitado ? 'Detener encendido remoto en este PC' : 'Activar encendido remoto en este PC'}</span>
               </button>
@@ -219,13 +219,11 @@ const actualizarUIControlCelular = () => {
   const btn = document.getElementById('btn-crear-control-celular');
   if (btn) {
     if (controlCelularHabilitado) {
-      btn.className = 'wd_btn wd_btn_danger';
+      btn.className = 'wd_btn wd_btn_danger wd_pairing_btn';
       btn.innerHTML = '<i class="fa-solid fa-link-slash"></i> Detener encendido remoto en este PC';
-      btn.style.width = '100%';
     } else {
-      btn.className = 'wd_btn wd_btn_primary';
+      btn.className = 'wd_btn wd_btn_primary wd_pairing_btn';
       btn.innerHTML = '<i class="fa-solid fa-mobile-screen-button"></i> Activar encendido remoto en este PC';
-      btn.style.width = '100%';
     }
   }
 };
@@ -316,7 +314,7 @@ const actualizarVistaHosts = () => {
       <div class="ad_empty">
         <i class="fa-solid fa-network-wired"></i>
         <p>No tienes otros equipos vinculados</p>
-        <span style="font-size: var(--fz_s3); color: var(--tx3);">Vincula este equipo desde la App móvil usando el código QR.</span>
+        <span class="wd_empty_note">Vincula este equipo desde la App móvil usando el código QR.</span>
       </div>
     `;
     return;
@@ -327,10 +325,10 @@ const actualizarVistaHosts = () => {
     const badgeClass = esOnline ? 'wd_badge_online' : 'wd_badge_offline';
     const badgeTexto = esOnline ? 'En Línea' : 'Desconectado';
     const icoClass = esOnline ? 'wd_device_ico_online' : 'wd_device_ico_offline';
-    const wolBtnAttr = esOnline ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+    const wolBtnAttr = esOnline ? 'disabled class="wd_btn_disabled"' : '';
     
     return `
-      <div class="wd_device_card" style="animation: wd_fade_in 0.4s ease both;">
+      <div class="wd_device_card">
         <div class="wd_device_left">
           <div class="wd_device_ico ${icoClass}">
             <i class="fa-solid ${h.macAddress ? 'fa-laptop' : 'fa-desktop'}"></i>
@@ -338,7 +336,7 @@ const actualizarVistaHosts = () => {
           <div class="wd_device_info">
             <strong>${h.alias || h.dispositivoNombre || 'Equipo Sin Nombre'}</strong>
             <span>IP: ${h.localIp || '—'} | MAC: ${h.macAddress || '—'}</span>
-            <div style="margin-top: 0.8vh;">
+            <div class="wd_device_badge_container">
               <span class="wd_badge ${badgeClass}">${badgeTexto}</span>
             </div>
           </div>
