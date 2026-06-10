@@ -1,11 +1,38 @@
 import './perfil.css';
-import { auth, db } from '../firebase.js';
-import { updatePassword } from 'firebase/auth';
-import { doc, updateDoc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { getls, savels, Mensaje, wiTip, wiDate } from '../widev.js';
+import { db } from '../firebase.js';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { getls, savels, wiDate } from '../widev.js';
 import { rutas } from '../rutas.js';
+import { linkweb } from '../wii.js';
 
 const wi = () => getls('wiSmile') || {};
+
+const abrirNavegador = (url) => {
+  const hasGlobalTauri = typeof window !== 'undefined' && window.__TAURI__ !== undefined;
+  const esTauri = hasGlobalTauri || (typeof window !== 'undefined' && (
+    window.__TAURI_INTERNALS__ !== undefined || 
+    navigator.userAgent.includes('WebView2') ||
+    window.origin?.includes("tauri") || 
+    location.protocol === 'tauri:'
+  ));
+
+  if (esTauri && hasGlobalTauri) {
+    if (window.__TAURI__.core && typeof window.__TAURI__.core.invoke === 'function') {
+      window.__TAURI__.core.invoke('abrir_navegador', { url }).catch((err) => {
+        console.error(err);
+        window.open(url, '_blank');
+      });
+      return;
+    } else if (typeof window.__TAURI__.invoke === 'function') {
+      window.__TAURI__.invoke('abrir_navegador', { url }).catch((err) => {
+        console.error(err);
+        window.open(url, '_blank');
+      });
+      return;
+    }
+  }
+  window.open(url, '_blank');
+};
 
 export const render = () => {
   const u = wi();
@@ -18,8 +45,6 @@ export const render = () => {
   const rol       = u.rol       || 'smile';
   const plan      = u.plan      || 'free';
   const estado    = u.estado    || 'activo';
-  const tema      = (u.tema     || 'Por defecto').split('|')[0];
-  const uid       = u.uid       || '';
   const avatar    = u.avatar    || '';
   const fechaNacimiento = u.fechaNacimiento || '';
   const pais      = u.pais      || '';
@@ -67,69 +92,51 @@ export const render = () => {
       </div>
     </div>
 
+    <div class="prf_banner_card">
+      <div class="prf_banner_icon"><i class="fas fa-shield-halved"></i></div>
+      <div class="prf_banner_body">
+        <h3>Edición de Perfil en la Web</h3>
+        <p>Para garantizar la seguridad de tus datos y credenciales, la edición del perfil y el cambio de contraseña se gestionan de forma segura desde nuestra consola web.</p>
+      </div>
+      <button id="btn_ir_web" class="prf_btn_web"><i class="fas fa-external-link-alt"></i> Ir a la consola web</button>
+    </div>
+
     <div class="prf_grid">
 
       <div class="prf_card">
-        <h2 class="prf_card_tit"><i class="fas fa-user-edit"></i> Editar perfil</h2>
+        <h2 class="prf_card_tit"><i class="fas fa-address-card"></i> Datos personales</h2>
         
-        <div class="prf_form_2col">
-          <div class="prf_form_grp">
-            <label>Nombres</label>
-            <input id="prf_nombre" value="${nombre}" placeholder="Tus nombres">
-          </div>
-          <div class="prf_form_grp">
-            <label>Apellidos</label>
-            <input id="prf_apellidos" value="${apellidos}" placeholder="Tus apellidos">
-          </div>
+        <div class="prf_row">
+          <span class="prf_lbl"><i class="fas fa-user"></i> Nombres</span>
+          <span class="prf_val">${nombre}</span>
         </div>
-        
-        <label>Enlace del Avatar (URL)</label>
-        <input id="prf_avatar" value="${avatar}" placeholder="https://tu-foto.com/imagen.jpg">
-        
-        <div class="prf_form_2col">
-          <div class="prf_form_grp">
-            <label>Fecha de Nacimiento</label>
-            <input type="date" id="prf_nacimiento" value="${fechaNacimientoStr}">
-          </div>
-          <div class="prf_form_grp">
-            <label>Género</label>
-            <select id="prf_genero">
-              <option value="" disabled ${!genero ? 'selected' : ''}>Selecciona tu género</option>
-              <option value="Masculino" ${genero === 'Masculino' ? 'selected' : ''}>Masculino</option>
-              <option value="Femenino" ${genero === 'Femenino' ? 'selected' : ''}>Femenino</option>
-              <option value="Otro" ${genero === 'Otro' ? 'selected' : ''}>Otro</option>
-              <option value="Prefiero no decirlo" ${genero === 'Prefiero no decirlo' ? 'selected' : ''}>Prefiero no decirlo</option>
-            </select>
-          </div>
+        <div class="prf_row">
+          <span class="prf_lbl"><i class="fas fa-user"></i> Apellidos</span>
+          <span class="prf_val">${apellidos}</span>
         </div>
-
-        <div class="prf_form_2col">
-          <div class="prf_form_grp">
-            <label>País</label>
-            <input id="prf_pais" value="${pais}" placeholder="Ej. Perú, México, España...">
-          </div>
-          <div class="prf_form_grp">
-            <label>Gustos o intereses</label>
-            <input id="prf_gustos" value="${gustos}" placeholder="Ej. Fútbol, leer, viajar...">
-          </div>
+        <div class="prf_row">
+          <span class="prf_lbl"><i class="fas fa-calendar-day"></i> Nacimiento</span>
+          <span class="prf_val">${fechaNacimientoStr || 'No especificada'}</span>
         </div>
-        
-        <label>Biografía</label>
-        <textarea id="prf_bio" rows="3" placeholder="Cuéntanos un poco sobre ti...">${bio}</textarea>
-
-        <button id="prf_guardar" class="prf_btn"><i class="fas fa-save"></i> Guardar cambios</button>
+        <div class="prf_row">
+          <span class="prf_lbl"><i class="fas fa-venus-mars"></i> Género</span>
+          <span class="prf_val">${genero || 'No especificado'}</span>
+        </div>
+        <div class="prf_row">
+          <span class="prf_lbl"><i class="fas fa-map-marker-alt"></i> País</span>
+          <span class="prf_val">${pais || 'No especificado'}</span>
+        </div>
+        <div class="prf_row">
+          <span class="prf_lbl"><i class="fas fa-heart"></i> Intereses</span>
+          <span class="prf_val">${gustos || 'No especificados'}</span>
+        </div>
+        <div class="prf_row" style="flex-direction: column; align-items: flex-start; gap: 0.8vh;">
+          <span class="prf_lbl"><i class="fas fa-comment-alt"></i> Biografía</span>
+          <span class="prf_val" style="text-align: left; white-space: normal; overflow: visible; text-overflow: clip; width: 100%; font-weight: normal; color: var(--tx2); line-height: 1.4; padding-left: 2.5vh;">${bio || 'Sin biografía.'}</span>
+        </div>
       </div>
 
       <div class="prf_col_right">
-        <div class="prf_card">
-          <h2 class="prf_card_tit"><i class="fas fa-lock"></i> Actualizar contraseña</h2>
-          <label>Nueva contraseña</label>
-          <input type="password" id="prf_pass" placeholder="Ingresa tu nueva contraseña">
-          <label>Confirmar contraseña</label>
-          <input type="password" id="prf_pass_conf" placeholder="Confirma tu nueva contraseña">
-          <button id="prf_guardar_pass" class="prf_btn"><i class="fas fa-key"></i> Actualizar contraseña</button>
-        </div>
-
         <div class="prf_card">
           <h2 class="prf_card_tit"><i class="fas fa-info-circle"></i> Datos de cuenta</h2>
           <div class="prf_row">
@@ -185,14 +192,13 @@ export const init = async () => {
   const uLocal = wi();
   if (!uLocal.email) return rutas.navigate('/');
 
-  // Sincronizar datos con Firestore al cargar para tener lo último y backfill
+  // Sincronizar datos con Firestore al cargar para tener lo último
   try {
     const uSnap = await getDoc(doc(db, 'smiles', uLocal.usuario));
     if (uSnap.exists()) {
       const d = uSnap.data();
       const cleanData = { ...d };
 
-      // Convertir a formatos JSON serializables idénticos a los del localStorage
       if (cleanData.fechaNacimiento) {
         try {
           const dateObj = cleanData.fechaNacimiento.toDate ? cleanData.fechaNacimiento.toDate() : new Date(cleanData.fechaNacimiento);
@@ -236,115 +242,8 @@ export const init = async () => {
     console.warn('Sync Firestore perfil/registros error:', e);
   }
   
-  onDoc('click', '#prf_guardar', async function () {
-    const u = wi();
-    const nacimientoEl = document.getElementById('prf_nacimiento');
-    const rawNacimiento = nacimientoEl ? nacimientoEl.value : '';
-    let nacimientoTS = '';
-    if (rawNacimiento) {
-      const [yyyy, mm, dd] = rawNacimiento.split('-').map(Number);
-      nacimientoTS = new Date(yyyy, mm - 1, dd, 12, 0, 0);
-    }
-
-    const nombreEl = document.getElementById('prf_nombre');
-    const apellidosEl = document.getElementById('prf_apellidos');
-    const avatarEl = document.getElementById('prf_avatar');
-    const paisEl = document.getElementById('prf_pais');
-    const generoEl = document.getElementById('prf_genero');
-    const gustosEl = document.getElementById('prf_gustos');
-    const bioEl = document.getElementById('prf_bio');
-
-    const nombreVal = nombreEl ? nombreEl.value.trim() : '';
-    const apellidosVal = apellidosEl ? apellidosEl.value.trim() : '';
-    const avatarVal = avatarEl ? avatarEl.value.trim() : '';
-    const paisVal = paisEl ? paisEl.value.trim() : '';
-    const generoVal = generoEl ? generoEl.value : '';
-    const gustosVal = gustosEl ? gustosEl.value.trim() : '';
-    const bioVal = bioEl ? bioEl.value.trim() : '';
-
-    const updates = {
-      nombre: nombreVal,
-      apellidos: apellidosVal,
-      avatar: avatarVal,
-      fechaNacimiento: nacimientoTS,
-      pais: paisVal,
-      genero: generoVal,
-      gustos: gustosVal,
-      bio: bioVal,
-      ultActividad: serverTimestamp()
-    };
-
-    if (!updates.nombre) return wiTip(nombreEl, 'Ingresa tu nombre', 'error');
-
-    this.disabled = true;
-    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-    try {
-      await updateDoc(doc(db, 'smiles', u.usuario), updates);
-      
-      await setDoc(doc(db, 'registros', u.usuario), {
-        usuario: u.usuario,
-        email: u.email,
-        uid: u.uid,
-        actualizado: serverTimestamp()
-      }, { merge: true });
-
-      savels('wiSmile', { 
-        ...u, 
-        ...updates, 
-        fechaNacimiento: nacimientoTS ? nacimientoTS.toISOString() : '',
-        ultActividad: Date.now() 
-      }, 24);
-      
-      const fullnameEl = document.querySelector('.prf_fullname');
-      if (fullnameEl) fullnameEl.textContent = `${updates.nombre} ${updates.apellidos}`;
-      
-      const avEl = document.querySelector('.prf_av');
-      if (avEl) {
-        avEl.src = updates.avatar || '/smile.avif';
-      }
-      
-      Mensaje('Perfil actualizado ✅', 'success');
-      
-      // Volver a cargar para actualizar todos los campos estáticos
-      setTimeout(() => rutas.navigate('/perfil', false), 1000);
-    } catch (e) {
-      console.error(e);
-      Mensaje('Error al guardar', 'error');
-    } finally {
-      this.disabled = false;
-      this.innerHTML = '<i class="fas fa-save"></i> Guardar cambios';
-    }
-  });
-
-  onDoc('click', '#prf_guardar_pass', async function () {
-    const passEl = document.getElementById('prf_pass');
-    const passConfEl = document.getElementById('prf_pass_conf');
-    const p1 = passEl ? passEl.value : '';
-    const p2 = passConfEl ? passConfEl.value : '';
-    
-    if (!p1 || p1.length < 6) return wiTip(passEl, 'Mínimo 6 caracteres', 'error');
-    if (p1 !== p2) return wiTip(passConfEl, 'Las contraseñas no coinciden', 'error');
-    
-    if (!auth.currentUser) return Mensaje('Sesión expirada. Por favor recarga', 'error');
-    
-    this.disabled = true;
-    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
-    try {
-      await updatePassword(auth.currentUser, p1);
-      if (passEl) passEl.value = '';
-      if (passConfEl) passConfEl.value = '';
-      Mensaje('Contraseña actualizada correctamente ✅', 'success');
-    } catch (e) {
-      console.error(e);
-      if (e.code === 'auth/requires-recent-login') {
-        Mensaje('Por seguridad, cierra sesión y vuelve a ingresar para cambiar la contraseña.', 'error');
-      } else {
-        Mensaje('Error al actualizar contraseña', 'error');
-      }
-    } finally {
-      this.disabled = false;
-      this.innerHTML = '<i class="fas fa-key"></i> Actualizar contraseña';
-    }
+  onDoc('click', '#btn_ir_web', function () {
+    abrirNavegador(`${linkweb}/perfil`);
   });
 };
 

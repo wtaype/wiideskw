@@ -219,10 +219,66 @@
 }
 .prf_copy:hover{ background: var(--mco); color: var(--txa); transform: translateY(-.1vh); }
 
+/* ==================== BANNER CARD ==================== */
+.prf_banner_card {
+  display: flex;
+  align-items: center;
+  gap: 2.5vh;
+  background: color-mix(in srgb, var(--mco) 8%, var(--wb));
+  border: 1px dashed var(--mco);
+  border-radius: 1.8vh;
+  padding: 2.5vh 3vh;
+  box-shadow: 0 4px 12px rgba(0,0,0,.02);
+}
+.prf_banner_icon {
+  font-size: var(--fz_m5);
+  color: var(--mco);
+  flex-shrink: 0;
+}
+.prf_banner_body {
+  flex: 1;
+}
+.prf_banner_body h3 {
+  font-size: var(--fz_m2);
+  font-weight: 700;
+  color: var(--tx1);
+  margin-bottom: 0.5vh;
+}
+.prf_banner_body p {
+  font-size: var(--fz_m1);
+  color: var(--tx2);
+  line-height: 1.4;
+}
+.prf_btn_web {
+  flex-shrink: 0;
+  padding: 1.2vh 2.5vh;
+  background: var(--mco);
+  color: var(--txa);
+  border: none;
+  border-radius: 1vh;
+  font-size: var(--fz_m1);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--tr_f);
+  display: inline-flex;
+  align-items: center;
+  gap: 1vh;
+}
+.prf_btn_web:hover {
+  transform: translateY(-.2vh);
+  filter: brightness(1.08);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--mco) 40%, transparent);
+}
+
 /* ==================== RESPONSIVE ==================== */
 @media (max-width:768px){
   .prf_grid, .prf_form_2col { grid-template-columns: 1fr; }
   .prf_hero{ flex-direction: column; text-align: center; padding: 2.5vh; }
   .prf_username, .prf_rol_chip{ justify-content: center; }
   .prf_lbl { min-width: auto; }
+  .prf_banner_card {
+    flex-direction: column;
+    text-align: center;
+    gap: 2vh;
+  }
 }
