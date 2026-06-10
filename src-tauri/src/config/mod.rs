@@ -1,2 +1,2 @@
-pub mod json;
 pub mod hash;
+pub mod json;

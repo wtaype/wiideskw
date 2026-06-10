@@ -1,0 +1,85 @@
+/* ── Lab — estilos mínimos y naturales ────────────────────── */
+.lab_wrap {
+  padding: 2vh 2vw;
+  max-width: 480px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2vh;
+}
+
+.lab_title {
+  margin: 0;
+  font-size: var(--fz_l1);
+  font-weight: 700;
+  color: var(--tx1);
+}
+
+.lab_card {
+  background: var(--wb);
+  border: 1px solid var(--brd);
+  border-radius: 1.2vh;
+  padding: 2vh 2vw;
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
+}
+
+.lab_card_title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--tx1);
+  font-size: var(--fz_m3);
+}
+
+.lab_card_desc {
+  margin: 0;
+  color: var(--tx3);
+  font-size: var(--fz_s4);
+  line-height: 1.5;
+}
+
+.lab_btns {
+  display: flex;
+  gap: 1vh;
+  flex-wrap: wrap;
+}
+
+/* Botón base */
+.lab_btn {
+  padding: 0.8vh 1.6vh;
+  border-radius: 0.7vh;
+  border: 1.5px solid var(--brd);
+  background: transparent;
+  font-size: var(--fz_m);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--tr_f);
+  color: var(--tx2);
+}
+
+/* Variantes de color usando las vars del sistema */
+.lab_none    { border-color: var(--brd);     color: var(--tx3); }
+.lab_none:hover    { background: var(--brd);     color: var(--tx1); }
+
+.lab_success { border-color: var(--success);  color: var(--success); }
+.lab_success:hover { background: var(--success);  color: #fff; }
+
+.lab_info    { border-color: var(--info);     color: var(--info); }
+.lab_info:hover    { background: var(--info);     color: #fff; }
+
+.lab_warning { border-color: var(--warning);  color: var(--warning); }
+.lab_warning:hover { background: var(--warning);  color: #fff; }
+
+.lab_error   { border-color: var(--error);    color: var(--error); }
+.lab_error:hover   { background: var(--error);    color: #fff; }
+
+.lab_estado {
+  margin: 0;
+  font-size: var(--fz_m);
+  color: var(--tx2);
+}
+
+.lab_estado strong {
+  color: var(--tx1);
+}

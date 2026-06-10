@@ -1,5 +1,5 @@
 // signaling.rs — Intercambio de SDP/ICE con Firestore REST API
-// TODO: Implementar con reqwest o HttpURLConnection
+// TODO: Implementar con reqwest
 
 pub fn enviar_oferta(host_id: &str, _sdp: &str) -> Result<(), Box<dyn std::error::Error>> {
     todo!("Implementar envío de oferta SDP para hostId: {}", host_id)

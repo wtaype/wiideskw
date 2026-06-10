@@ -434,7 +434,7 @@ wiTip.CSS = false;
 
 // ── 14. SISTEMA IP & GEO: wiIp ───────────────────────────────
 export const wiIp = (geo) => {
-  return fetch('https://ipinfo.io/json?token=3868948e170a74')
+  return fetch('https://ipinfo.io/json?token='+import.meta.env.VITE_WIIP,)
     .then(r => r.json())
     .then(data => {
       const ua = navigator.userAgent;

@@ -7,6 +7,7 @@ const _estado = {
   estadoWebRTC: 'inactivo',  // 'inactivo' | 'negociando' | 'conectado' | 'caido'
   pinVerificado: false,      // true después de verificar el PIN correctamente
   wolActivo: false,          // true si el adaptador de red tiene WoL habilitado
+  labComando: '—',           // Último comando del laboratorio (sonidos)
 };
 
 const _suscriptores = new Set();
@@ -33,4 +34,5 @@ export const limpiarSesion = () => setEstado({
   hostConectado: null,
   estadoWebRTC: 'inactivo',
   pinVerificado: false,
+  labComando: '—',
 });

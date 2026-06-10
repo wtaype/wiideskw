@@ -1,8 +1,8 @@
-// verificar.rs — Verifica y activa Wake-on-LAN en el adaptador de red de Windows
+// encender.rs — Wake-on-LAN: verificar y activar
 
 use std::process::Command;
 
-pub fn esta_habilitado_wol() -> Result<bool, Box<dyn std::error::Error>> {
+pub fn wol_activo() -> Result<bool, Box<dyn std::error::Error>> {
     let mut cmd = Command::new("powershell");
     cmd.args(["-Command",
         "(Get-NetAdapterPowerManagement | Where-Object { $_.WakeOnMagicPacket -eq 'Enabled' }).Count -gt 0"

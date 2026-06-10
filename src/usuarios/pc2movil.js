@@ -13,9 +13,9 @@ let docListeners = [];
 
 // Pre-cargar algunos celulares mockeados para demostración
 let dispositivosMoviles = [
-  { id: 'dev_xiaomi', alias: 'Xiaomi Mi 11 Ultra', localIp: '192.168.18.99', macAddress: '8C-A6-DF-4E-9F-12', online: true, tipo: 'android' },
-  { id: 'dev_iphone', alias: 'iPhone 15 Pro Max', localIp: '192.168.18.105', macAddress: '00-25-90-A8-1C-5E', online: false, tipo: 'ios' },
-  { id: 'dev_pixel', alias: 'Google Pixel 8 Pro', localIp: '192.168.18.112', macAddress: 'BC-D1-1F-E2-A3-89', online: true, tipo: 'android' }
+  { id: 'dev_xiaomi', alias: 'Xiaomi Mi 11 Ultra', localIp: '192.168.1.99', macAddress: '8C-A6-DF-00-11-22', online: true, tipo: 'android' },
+  { id: 'dev_iphone', alias: 'iPhone 15 Pro Max', localIp: '192.168.1.105', macAddress: '00-25-90-AA-BB-CC', online: false, tipo: 'ios' },
+  { id: 'dev_pixel', alias: 'Google Pixel 8 Pro', localIp: '192.168.1.112', macAddress: 'BC-D1-1F-33-44-55', online: true, tipo: 'android' }
 ];
 
 const wi = () => getls('wiSmile') || {};

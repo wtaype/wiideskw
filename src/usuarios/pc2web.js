@@ -23,8 +23,8 @@ let opcionesProyeccion = {
 
 // Historial de visualizadores (Simulación de conexiones)
 let visualizadoresHistorial = [
-  { hora: '19:42:05', ip: '192.168.18.50', dispositivo: 'Chrome / Android', estado: 'conectado' },
-  { hora: '19:42:15', ip: '192.168.18.120', dispositivo: 'Safari / iPadOS', estado: 'conectado' }
+  { hora: '19:42:05', ip: '192.168.1.50', dispositivo: 'Chrome / Android', estado: 'conectado' },
+  { hora: '19:42:15', ip: '192.168.1.120', dispositivo: 'Safari / iPadOS', estado: 'conectado' }
 ];
 
 const wi = () => getls('wiSmile') || {};

@@ -1,0 +1,632 @@
+import './smile.css';
+import { getls, savels, Notificacion, wiSpin, wicopy, wiAuth } from '../widev.js';
+import { app } from '../wii.js';
+import { rutas } from '../rutas.js';
+import { db } from '../firebase.js';
+import { doc, setDoc, getDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+
+// Configuración local por defecto (si no estamos en Tauri)
+let configLocal = {
+  dispositivo_nombre: 'Mi PC',
+  ip_local: '127.0.0.1',
+  mac_address: '00-00-00-00-00-00',
+  ip_broadcast: '255.255.255.255',
+  dominio_remoto: 'https://wiidesk.web.app',
+  seguridad: {
+    requerir_pin: true,
+    pin_hash: '',
+    pin_salt: ''
+  }
+};
+
+let wolHabilitado = false;
+let cargandoWol = false;
+let cargandoPower = false;
+let hostsRemotos = [];
+let cargandoHosts = true;
+let hostIdUnico = '';
+let controlCelularHabilitado = false;
+
+// Intervalo y desuscripción para limpieza
+let intervalHeartbeat = null;
+let unsubControl = null;
+
+const obtenerUsuario = () => getls('wiSmile') || null;
+
+// Invocar comando Tauri de manera segura
+const invocarTauri = async (cmd, args = {}) => {
+  if (window.__TAURI__ && window.__TAURI__.core && typeof window.__TAURI__.core.invoke === 'function') {
+    return await window.__TAURI__.core.invoke(cmd, args);
+  }
+  throw new Error('Tauri no disponible');
+};
+
+export const render = () => {
+  const user = obtenerUsuario();
+  if (!user) {
+    setTimeout(() => rutas.navigate('/login'), 0);
+    return '';
+  }
+
+  const primerNombre = user.nombre || user.usuario || 'Usuario';
+
+  // Generación de tarjetas de hosts remotos (Fase 1: UI & Skeletons)
+  let htmlHosts = '';
+  if (cargandoHosts) {
+    // Shimmer skeletons
+    htmlHosts = `
+      <div class="wd_skeleton_card"></div>
+      <div class="wd_skeleton_card" style="animation-delay: 0.2s;"></div>
+      <div class="wd_skeleton_card" style="animation-delay: 0.4s;"></div>
+    `;
+  } else if (hostsRemotos.length === 0) {
+    htmlHosts = `
+      <div class="ad_empty">
+        <i class="fa-solid fa-network-wired"></i>
+        <p>No tienes otros equipos vinculados</p>
+        <span style="font-size: var(--fz_s3); color: var(--tx3);">Vincula este equipo desde la App móvil usando el código QR.</span>
+      </div>
+    `;
+  } else {
+    htmlHosts = hostsRemotos.map(h => {
+      const esOnline = h.online || false;
+      const badgeClass = esOnline ? 'wd_badge_online' : 'wd_badge_offline';
+      const badgeTexto = esOnline ? 'En Línea' : 'Desconectado';
+      const icoClass = esOnline ? 'wd_device_ico_online' : 'wd_device_ico_offline';
+      const wolBtnAttr = esOnline ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+      
+      return `
+        <div class="wd_device_card">
+          <div class="wd_device_left">
+            <div class="wd_device_ico ${icoClass}">
+              <i class="fa-solid ${h.macAddress ? 'fa-laptop' : 'fa-desktop'}"></i>
+            </div>
+            <div class="wd_device_info">
+              <strong>${h.alias || h.dispositivoNombre || 'Equipo Sin Nombre'}</strong>
+              <span>IP: ${h.localIp || '—'} | MAC: ${h.macAddress || '—'}</span>
+              <div style="margin-top: 0.8vh;">
+                <span class="wd_badge ${badgeClass}">${badgeTexto}</span>
+              </div>
+            </div>
+          </div>
+          <div class="wd_device_actions">
+            ${esOnline ? 
+              `<button class="wd_btn_icon btn-conectar" data-hostid="${h.hostId}" title="Conectar"><i class="fa-solid fa-expand"></i></button>` :
+              `<button class="wd_btn_icon btn-encender" data-mac="${h.macAddress}" data-ipb="${h.ipBroadcast || '255.255.255.255'}" ${wolBtnAttr} title="Despertar (WoL)"><i class="fa-solid fa-power-off"></i></button>`
+            }
+            <button class="wd_btn_icon wd_btn_icon_danger btn-apagar-remoto" data-hostid="${h.hostId}" title="Apagar equipo"><i class="fa-solid fa-circle-minus"></i></button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  return `
+    <div class="wd_dash">
+      
+      <!-- HERO BANNER -->
+      <header class="wd_hero">
+        <div class="wd_hero_glow"></div>
+        <div class="wd_hero_content">
+          <div class="wd_welcome">
+            <h1>¡Hola, <span>${primerNombre}</span>!</h1>
+            <p>Bienvenido al Centro de Control de Wiidesk. Gestiona tus equipos locales y remotos.</p>
+          </div>
+          <div>
+            <span class="wd_badge wd_badge_active"><i class="fa-solid fa-shield-halved"></i> Host Activo</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- SECCIONES GRID -->
+      <div class="wd_grid">
+        
+        <!-- COLUMNA IZQUIERDA: ESTE EQUIPO (HOST LOCAL) -->
+        <div class="wd_col">
+          <h2 class="wd_panel_title"><i class="fa-solid fa-display"></i> Este Equipo (Host Local)</h2>
+          
+          <div class="wd_card">
+            <div class="wd_host_details">
+              <div class="wd_host_row">
+                <span class="wd_host_label">Nombre de Red:</span>
+                <span class="wd_host_val" id="local-hostname">${configLocal.dispositivo_nombre}</span>
+              </div>
+              <div class="wd_host_row">
+                <span class="wd_host_label">Dirección IP:</span>
+                <span class="wd_host_val" id="local-ip">${configLocal.ip_local}</span>
+              </div>
+              <div class="wd_host_row">
+                <span class="wd_host_label">Dirección MAC:</span>
+                <span class="wd_host_val" id="local-mac" style="cursor: pointer;" title="Copiar MAC">${configLocal.mac_address}</span>
+              </div>
+              <div class="wd_host_row">
+                <span class="wd_host_label">Estado Wake-on-LAN:</span>
+                <span class="wd_badge ${wolHabilitado ? 'wd_badge_online' : 'wd_badge_offline'}" id="local-wol-badge">
+                  ${wolHabilitado ? 'WoL Activo' : 'WoL Inactivo'}
+                </span>
+              </div>
+              <div class="wd_host_row">
+                <span class="wd_host_label">Control Celular:</span>
+                <span class="wd_badge ${controlCelularHabilitado ? 'wd_badge_online' : 'wd_badge_offline'}" id="control-celular-badge">
+                  ${controlCelularHabilitado ? 'Activo' : 'Inactivo'}
+                </span>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 2vh;">
+              <button class="wd_btn wd_btn_primary" id="btn-toggle-wol">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Activar WoL Automático
+              </button>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2vh;">
+                <button class="wd_btn wd_btn_secondary" id="btn-suspender-local">
+                  <i class="fa-solid fa-moon"></i> Suspender PC
+                </button>
+                <button class="wd_btn wd_btn_danger" id="btn-apagar-local">
+                  <i class="fa-solid fa-power-off"></i> Apagar PC
+                </button>
+              </div>
+            </div>
+
+            <!-- VINCULACIÓN CON CELULAR (DIRECTA POR FIRESTORE) -->
+            <div class="wd_pairing_box">
+              <h3 style="font-size: var(--fz_m2); font-weight: 700; color: var(--tx1);">Control Celular</h3>
+              <p style="font-size: var(--fz_s2); color: var(--tx3); text-align: center; margin-bottom: 2vh;">
+                Registra este equipo en la nube para poder encenderlo, apagarlo o suspenderlo directamente desde la aplicación móvil de Wiidesk.
+              </p>
+              
+              <button class="wd_btn ${controlCelularHabilitado ? 'wd_btn_danger' : 'wd_btn_primary'}" id="btn-crear-control-celular" style="width: 100%;">
+                <i class="fa-solid ${controlCelularHabilitado ? 'fa-link-slash' : 'fa-mobile-screen-button'}"></i> 
+                <span>${controlCelularHabilitado ? 'Detener encendido remoto en este PC' : 'Activar encendido remoto en este PC'}</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: DIRECTORIO DE EQUIPOS REMOTOS -->
+        <div class="wd_col">
+          <h2 class="wd_panel_title"><i class="fa-solid fa-network-wired"></i> Equipos Remotos</h2>
+          <div class="wd_host_list" id="remote-hosts-list">
+            ${htmlHosts}
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  `;
+};
+
+const cleanupControlRemoto = () => {
+  if (intervalHeartbeat) {
+    clearInterval(intervalHeartbeat);
+    intervalHeartbeat = null;
+  }
+  if (unsubControl) {
+    unsubControl();
+    unsubControl = null;
+  }
+};
+
+const actualizarUIControlCelular = () => {
+  const badge = document.getElementById('control-celular-badge');
+  if (badge) {
+    badge.textContent = controlCelularHabilitado ? 'Activo' : 'Inactivo';
+    badge.className = controlCelularHabilitado ? 'wd_badge wd_badge_online' : 'wd_badge wd_badge_offline';
+  }
+  
+  const btn = document.getElementById('btn-crear-control-celular');
+  if (btn) {
+    if (controlCelularHabilitado) {
+      btn.className = 'wd_btn wd_btn_danger';
+      btn.innerHTML = '<i class="fa-solid fa-link-slash"></i> Detener encendido remoto en este PC';
+      btn.style.width = '100%';
+    } else {
+      btn.className = 'wd_btn wd_btn_primary';
+      btn.innerHTML = '<i class="fa-solid fa-mobile-screen-button"></i> Activar encendido remoto en este PC';
+      btn.style.width = '100%';
+    }
+  }
+};
+
+const handleToggleControlCelular = async (e) => {
+  const btn = e.currentTarget;
+  const user = obtenerUsuario();
+  if (!user) return;
+
+  if (controlCelularHabilitado) {
+    // Desactivar
+    controlCelularHabilitado = false;
+    savels('wiControlCelular', 'false');
+    cleanupControlRemoto();
+    
+    if (db) {
+      try {
+        const docId = `${user.usuario.trim().toLowerCase()}_${configLocal.dispositivo_nombre.trim().toLowerCase()}`;
+        const docRef = doc(db, 'control', docId);
+        await deleteDoc(docRef);
+        Notificacion('Control celular desactivado y removido de la nube', 'info');
+      } catch (err) {
+        console.error('Error al borrar control celular de Firestore:', err);
+      }
+    }
+    actualizarUIControlCelular();
+  } else {
+    // Activar
+    controlCelularHabilitado = true;
+    savels('wiControlCelular', 'true');
+    actualizarUIControlCelular();
+    
+    Notificacion('Registrando equipo en Firestore...', 'info');
+    try {
+      await iniciarControlRemoto(user);
+      Notificacion('¡Control celular activado y registrado con éxito!', 'success');
+    } catch (err) {
+      console.error(err);
+      controlCelularHabilitado = false;
+      savels('wiControlCelular', 'false');
+      actualizarUIControlCelular();
+      Notificacion('Error al registrar equipo en Firestore. Revisa tu conexión/reglas.', 'error');
+    }
+  }
+};
+
+// Carga la lista de equipos remotos del usuario
+const cargarEquiposRemotos = async (ownerUid) => {
+  if (!db || !ownerUid) {
+    cargandoHosts = false;
+    hostsRemotos = [
+      { hostId: 'host_office', alias: 'PC Oficina Principal', localIp: '192.168.1.50', macAddress: 'AA-BB-CC-DD-EE-FF', online: true },
+      { hostId: 'host_home', alias: 'Laptop Familiar', localIp: '192.168.1.120', macAddress: '00-11-22-33-44-55', online: false }
+    ];
+    actualizarVistaHosts();
+    return;
+  }
+
+  try {
+    const q = query(collection(db, 'equipos'), where('ownerUid', '==', ownerUid));
+    const querySnapshot = await getDocs(q);
+    const auxList = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      // Filtrar para no mostrar este mismo host en la lista de remotos
+      if (data.hostId !== hostIdUnico) {
+        auxList.push({
+          id: doc.id,
+          ...data
+        });
+      }
+    });
+    hostsRemotos = auxList;
+  } catch (err) {
+    console.error('Error cargando equipos:', err);
+  } finally {
+    cargandoHosts = false;
+    actualizarVistaHosts();
+  }
+};
+
+const actualizarVistaHosts = () => {
+  const container = document.getElementById('remote-hosts-list');
+  if (!container) return;
+  
+  if (hostsRemotos.length === 0) {
+    container.innerHTML = `
+      <div class="ad_empty">
+        <i class="fa-solid fa-network-wired"></i>
+        <p>No tienes otros equipos vinculados</p>
+        <span style="font-size: var(--fz_s3); color: var(--tx3);">Vincula este equipo desde la App móvil usando el código QR.</span>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = hostsRemotos.map(h => {
+    const esOnline = h.online || false;
+    const badgeClass = esOnline ? 'wd_badge_online' : 'wd_badge_offline';
+    const badgeTexto = esOnline ? 'En Línea' : 'Desconectado';
+    const icoClass = esOnline ? 'wd_device_ico_online' : 'wd_device_ico_offline';
+    const wolBtnAttr = esOnline ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+    
+    return `
+      <div class="wd_device_card" style="animation: wd_fade_in 0.4s ease both;">
+        <div class="wd_device_left">
+          <div class="wd_device_ico ${icoClass}">
+            <i class="fa-solid ${h.macAddress ? 'fa-laptop' : 'fa-desktop'}"></i>
+          </div>
+          <div class="wd_device_info">
+            <strong>${h.alias || h.dispositivoNombre || 'Equipo Sin Nombre'}</strong>
+            <span>IP: ${h.localIp || '—'} | MAC: ${h.macAddress || '—'}</span>
+            <div style="margin-top: 0.8vh;">
+              <span class="wd_badge ${badgeClass}">${badgeTexto}</span>
+            </div>
+          </div>
+        </div>
+        <div class="wd_device_actions">
+          ${esOnline ? 
+            `<button class="wd_btn_icon btn-conectar" data-hostid="${h.hostId}" title="Conectar"><i class="fa-solid fa-expand"></i></button>` :
+            `<button class="wd_btn_icon btn-encender" data-mac="${h.macAddress}" data-ipb="${h.ipBroadcast || '255.255.255.255'}" ${wolBtnAttr} title="Despertar (WoL)"><i class="fa-solid fa-power-off"></i></button>`
+          }
+          <button class="wd_btn_icon wd_btn_icon_danger btn-apagar-remoto" data-hostid="${h.hostId}" title="Apagar equipo"><i class="fa-solid fa-circle-minus"></i></button>
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
+// Handlers de botones locales
+const handleToggleWol = async (e) => {
+  const btn = e.currentTarget;
+  if (cargandoWol) return;
+  cargandoWol = true;
+  wiSpin(btn, true, 'Habilitando...');
+
+  try {
+    await invocarTauri('activar_wol');
+    wolHabilitado = true;
+    
+    const badge = document.getElementById('local-wol-badge');
+    if (badge) {
+      badge.textContent = 'WoL Activo';
+      badge.className = 'wd_badge wd_badge_online';
+    }
+    
+    Notificacion('Wake-on-LAN configurado automáticamente con éxito', 'success');
+  } catch (err) {
+    console.error('Error activando WoL:', err);
+    // Intentar verificar el estado real de nuevo
+    try {
+      wolHabilitado = await invocarTauri('verificar_wol');
+    } catch(e) {}
+    
+    if (wolHabilitado) {
+      Notificacion('Wake-on-LAN ya se encuentra habilitado', 'info');
+    } else {
+      Notificacion('No se pudo activar WoL automáticamente. Ejecuta la app como Administrador.', 'warning');
+    }
+  } finally {
+    cargandoWol = false;
+    wiSpin(btn, false, 'Activar WoL Automático');
+  }
+};
+
+const handleSuspenderLocal = async (e) => {
+  if (cargandoPower) return;
+  cargandoPower = true;
+  const btn = e.currentTarget;
+  wiSpin(btn, true, 'Suspendiendo...');
+  
+  try {
+    await invocarTauri('suspender_equipo');
+    Notificacion('Enviando comando de suspensión...', 'info');
+  } catch (err) {
+    console.error('Error al suspender:', err);
+    Notificacion('Error al suspender el equipo local', 'error');
+  } finally {
+    cargandoPower = false;
+    wiSpin(btn, false, 'Suspender PC');
+  }
+};
+
+const handleApagarLocal = async (e) => {
+  if (confirm('¿Seguro que deseas apagar este equipo de inmediato?')) {
+    try {
+      await invocarTauri('apagar_equipo');
+      Notificacion('Enviando comando de apagado...', 'info');
+    } catch (err) {
+      console.error('Error al apagar:', err);
+      Notificacion('Error al apagar el equipo local', 'error');
+    }
+  }
+};
+
+// Delegación de clicks generales en la vista
+const handleDashboardClick = async (e) => {
+  // Copiar MAC
+  const macVal = e.target.closest('#local-mac');
+  if (macVal) {
+    wicopy(macVal.textContent.trim(), macVal, '¡Copiado!');
+    return;
+  }
+
+  // Conectar con Host Remoto
+  const btnConectar = e.target.closest('.btn-conectar');
+  if (btnConectar) {
+    const hostId = btnConectar.getAttribute('data-hostid');
+    // Navegar al visor PC a PC
+    Notificacion(`Conectando a P2P remoto con ${hostId}...`, 'info');
+    rutas.navigate('/pc2pc');
+    return;
+  }
+
+  // Despertar Remoto (WoL)
+  const btnEncender = e.target.closest('.btn-encender');
+  if (btnEncender) {
+    const mac = btnEncender.getAttribute('data-mac');
+    const ipb = btnEncender.getAttribute('data-ipb');
+    wiSpin(btnEncender, true);
+    Notificacion(`Enviando paquete mágico a MAC ${mac}...`, 'info');
+    
+    // Mock de encendido
+    setTimeout(() => {
+      wiSpin(btnEncender, false);
+      Notificacion('Paquete Wake-on-LAN enviado', 'success');
+    }, 1200);
+    return;
+  }
+
+  // Apagar Remoto
+  const btnApagarRemoto = e.target.closest('.btn-apagar-remoto');
+  if (btnApagarRemoto) {
+    const hostId = btnApagarRemoto.getAttribute('data-hostid');
+    if (confirm(`¿Seguro que deseas apagar remotamente el equipo ${hostId}?`)) {
+      Notificacion('Comando de apagado remoto enviado', 'info');
+    }
+  }
+};
+
+// Inicia el registro, latido y listener de comandos del equipo local en Firestore
+const iniciarControlRemoto = async (user) => {
+  if (!db || !user || !user.usuario) return;
+  
+  try {
+    const docId = `${user.usuario.trim().toLowerCase()}_${configLocal.dispositivo_nombre.trim().toLowerCase()}`;
+    const docRef = doc(db, 'control', docId);
+    
+    // Registrar o actualizar información inicial del equipo
+    const docSnap = await getDoc(docRef);
+    const datos = {
+      id: docId,
+      uid: user.uid || '',
+      usuario: user.usuario,
+      equipo: configLocal.dispositivo_nombre,
+      ipLocal: configLocal.ip_local || '',
+      ipBroadcast: configLocal.ip_broadcast || '',
+      macAddress: configLocal.mac_address || '',
+      actualizado: serverTimestamp()
+    };
+    
+    if (!docSnap.exists()) {
+      datos.creado = serverTimestamp();
+      datos.pin = false;
+      datos.comando = 'ninguno';
+    }
+    
+    await setDoc(docRef, datos, { merge: true });
+    
+    // Iniciar latido (heartbeat) cada 30 segundos (optimizado para reducir escrituras)
+    if (intervalHeartbeat) clearInterval(intervalHeartbeat);
+    intervalHeartbeat = setInterval(async () => {
+      try {
+        await setDoc(docRef, { actualizado: serverTimestamp() }, { merge: true });
+      } catch (e) {
+        console.error('Error enviando latido:', e);
+      }
+    }, 30000); // 30 segundos
+    
+    // Escuchar comandos remotos
+    if (unsubControl) unsubControl();
+    unsubControl = onSnapshot(docRef, async (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data.comando && data.comando !== 'ninguno') {
+          const cmd = data.comando;
+          // Limpiar el comando inmediatamente en Firestore
+          try {
+            await setDoc(docRef, { comando: 'ninguno' }, { merge: true });
+          } catch (e) {
+            console.error('Error reseteando comando:', e);
+          }
+          
+          if (cmd === 'apagar') {
+            console.log('Comando de apagado remoto recibido.');
+            try {
+              await invocarTauri('apagar_equipo');
+            } catch (err) {
+              console.error('Error llamando a apagar_equipo:', err);
+            }
+          } else if (cmd === 'suspender') {
+            console.log('Comando de suspensión remoto recibido.');
+            try {
+              await invocarTauri('suspender_equipo');
+            } catch (err) {
+              console.error('Error llamando a suspender_equipo:', err);
+            }
+          }
+        }
+      }
+    });
+  } catch (err) {
+    console.error('Error al inicializar el control remoto:', err);
+    throw err;
+  }
+};
+
+export const init = async () => {
+  const user = obtenerUsuario();
+  if (!user) return setTimeout(() => rutas.navigate('/login'), 100);
+
+  // Inicializar estado local
+  hostIdUnico = getls('wiHostId') || '';
+  cargandoHosts = true;
+  cargandoWol = false;
+  cargandoPower = false;
+  controlCelularHabilitado = getls('wiControlCelular') === 'true';
+  actualizarUIControlCelular();
+
+  // Cargar configuración real desde Tauri si está disponible
+  try {
+    const configTauri = await invocarTauri('obtener_config');
+    if (configTauri) {
+      configLocal = configTauri;
+      
+      const elHostName = document.getElementById('local-hostname');
+      if (elHostName) elHostName.textContent = configLocal.dispositivo_nombre;
+      
+      const elIp = document.getElementById('local-ip');
+      if (elIp) elIp.textContent = configLocal.ip_local;
+      
+      const elMac = document.getElementById('local-mac');
+      if (elMac) elMac.textContent = configLocal.mac_address;
+    }
+  } catch (err) {
+    console.log('Utilizando config local fallback (no Tauri WebView)');
+  }
+
+  // Verificar WoL desde Tauri
+  try {
+    wolHabilitado = await invocarTauri('verificar_wol');
+    const badge = document.getElementById('local-wol-badge');
+    if (badge) {
+      badge.textContent = wolHabilitado ? 'WoL Activo' : 'WoL Inactivo';
+      badge.className = wolHabilitado ? 'wd_badge wd_badge_online' : 'wd_badge wd_badge_offline';
+    }
+  } catch (err) {
+    console.log('No se pudo verificar WoL (no Tauri)');
+  }
+
+  // Vincular eventos
+  const btnToggleWol = document.getElementById('btn-toggle-wol');
+  if (btnToggleWol) btnToggleWol.addEventListener('click', handleToggleWol);
+
+  const btnSuspender = document.getElementById('btn-suspender-local');
+  if (btnSuspender) btnSuspender.addEventListener('click', handleSuspenderLocal);
+
+  const btnApagar = document.getElementById('btn-apagar-local');
+  if (btnApagar) btnApagar.addEventListener('click', handleApagarLocal);
+
+  const btnCrearControl = document.getElementById('btn-crear-control-celular');
+  if (btnCrearControl) btnCrearControl.addEventListener('click', handleToggleControlCelular);
+
+  document.addEventListener('click', handleDashboardClick);
+
+  // Si está habilitado localmente, iniciar latido y listener de comandos
+  if (controlCelularHabilitado) {
+    await iniciarControlRemoto(user);
+  }
+
+  // Cargar hosts remotos de Firestore
+  cargarEquiposRemotos(user.uid);
+
+  console.log(`🏜️ Centro de Control de ${app} cargado.`);
+  window.__WIREADY__ = true;
+};
+
+export const cleanup = () => {
+  cleanupControlRemoto();
+  
+  const btnToggleWol = document.getElementById('btn-toggle-wol');
+  if (btnToggleWol) btnToggleWol.removeEventListener('click', handleToggleWol);
+
+  const btnSuspender = document.getElementById('btn-suspender-local');
+  if (btnSuspender) btnSuspender.removeEventListener('click', handleSuspenderLocal);
+
+  const btnApagar = document.getElementById('btn-apagar-local');
+  if (btnApagar) btnApagar.removeEventListener('click', handleApagarLocal);
+
+  const btnCrearControl = document.getElementById('btn-crear-control-celular');
+  if (btnCrearControl) btnCrearControl.removeEventListener('click', handleToggleControlCelular);
+
+  document.removeEventListener('click', handleDashboardClick);
+};

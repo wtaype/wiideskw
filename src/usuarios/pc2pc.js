@@ -16,8 +16,8 @@ let estadoBaja = null;
 
 // Equipos remotos preestablecidos si no se cargan de base de datos
 let equiposRemotosMock = [
-  { hostId: 'host_oficina', alias: 'Servidor Oficina', localIp: '192.168.1.150', macAddress: '1C-2F-90-A8-1D-4C', online: true },
-  { hostId: 'host_casa', alias: 'PC Gaming Casa', localIp: '192.168.18.52', macAddress: 'F8-75-A4-B9-82-D0', online: true },
+  { hostId: 'host_oficina', alias: 'Servidor Oficina', localIp: '192.168.1.150', macAddress: '1C-2F-90-AA-BB-CC', online: true },
+  { hostId: 'host_casa', alias: 'PC Gaming Casa', localIp: '192.168.1.52', macAddress: 'F8-75-A4-00-11-22', online: true },
   { hostId: 'host_render', alias: 'Estación de Render', localIp: '10.0.0.12', macAddress: '00-11-22-33-44-55', online: false }
 ];
 
@@ -161,7 +161,7 @@ export const render = () => {
                 <div class="win_body">
                   <pre>
 $ cargo tauri build
-   Compiling app v1.0.0 (C:\mipro\wiidesk)
+   Compiling app v1.0.0 (C:\proyectos\tudesk)
     Finished release [optimized] target(s) in 2m 14s
 $ ./target/release/wiidesk.exe
 [System] WebRTC signaling P2P: CONNECTED
