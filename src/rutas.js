@@ -66,7 +66,6 @@ export const NAV = {
 
 export const RUTAS = [
   { path: '/inicio',   area: 'todos/' },
-  { path: '/login',    area: 'todos/' },
   { path: '/acerca',     area: 'todos/acerca/' },
   { path: '/descubre',   area: 'todos/acerca/' },
   { path: '/terminos',   area: 'todos/acerca/' },
@@ -153,6 +152,11 @@ class WiRutas {
     if (this.cargand) return;
     this.cargand = true;
     const norm = wiPath.limpiar(ruta) === '/' ? `/${this.HOME}` : wiPath.limpiar(ruta);
+
+    if (norm === '/login') {
+      this.cargand = false;
+      return this.navigate('/', true);
+    }
 
     if (['/admin', '/usuarios', '/paginas'].includes(norm)) {
       const { getls } = await import('./widev.js');

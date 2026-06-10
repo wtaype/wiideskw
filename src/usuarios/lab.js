@@ -1,15 +1,18 @@
 import './lab.css';
 import { getls } from '../widev.js';
 import { db } from '../firebase.js';
-import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
+import { getEstado, suscribir } from '../estados.js';
 
 const wi = () => getls('wiSmile') || {};
-let unsubFirestore = null;
+let unsubEstado = null;
 
 // ── RENDER: Muestra los botones y el estado actual de los comandos ──
 export const render = () => {
   const u = wi();
   if (!u.email) return '';
+  
+  const actual = getEstado('labComando') || { cmd: '—', index: 0 };
   
   return `
     <div class="lab_wrap">
@@ -20,7 +23,7 @@ export const render = () => {
           <button class="lab_btn lab_info" data-cmd="hello">Emitir Pitido</button>
           <button class="lab_btn lab_none" data-cmd="ninguno">Detener/Limpiar</button>
         </div>
-        <p class="lab_estado">Estado actual: <strong id="lab-cmd-rt">—</strong></p>
+        <p class="lab_estado">Estado actual: <strong id="lab-cmd-rt">${actual.cmd || '—'}</strong></p>
       </div>
     </div>
   `;
@@ -40,33 +43,22 @@ const enviarComando = async (cmd) => {
 // ── INICIALIZACIÓN Y LIMPIEZA ──────────────────────────────────
 export const init = () => {
   cleanup();
-
-  const { uid } = wi();
-  if (uid) {
-    unsubFirestore = onSnapshot(doc(db, 'lab', uid), async (snap) => {
-      if (!snap.exists()) return;
-      const data = snap.data();
-      const cmd = data.comando ?? '—';
-
-      const el = document.getElementById('lab-cmd-rt');
-      if (el) {
-        el.textContent = cmd;
-      }
-
-      if (cmd && cmd !== 'ninguno' && cmd !== '—') {
-        // Ejecutar sonido nativo
-        if (window.__TAURI__ && window.__TAURI__.core && typeof window.__TAURI__.core.invoke === 'function') {
-          try {
-            await window.__TAURI__.core.invoke('lib_genial', { cmd });
-          } catch (err) {
-            console.error('Error al invocar Rust desde lab.js:', err);
-          }
-        } else {
-          console.log(`[Lab] Simulación de pitido: "${cmd}"`);
-        }
-      }
-    });
+  
+  // Sincronizamos la UI al entrar
+  const actual = getEstado('labComando') || { cmd: '—', index: 0 };
+  const el = document.getElementById('lab-cmd-rt');
+  if (el) {
+    el.textContent = actual.cmd || '—';
   }
+
+  // Suscribirse al estado reactivo global solo para actualizar la UI
+  unsubEstado = suscribir((estado) => {
+    const labCmd = estado.labComando || { cmd: '—', index: 0 };
+    const elRt = document.getElementById('lab-cmd-rt');
+    if (elRt) {
+      elRt.textContent = labCmd.cmd;
+    }
+  });
 
   // Escucha clics en los botones de esta pantalla
   document.addEventListener('click', handleBtnClick);
@@ -81,9 +73,8 @@ const handleBtnClick = (e) => {
 
 export const cleanup = () => {
   document.removeEventListener('click', handleBtnClick);
-  if (unsubFirestore) {
-    unsubFirestore();
-    unsubFirestore = null;
+  if (unsubEstado) {
+    unsubEstado();
+    unsubEstado = null;
   }
 };
-

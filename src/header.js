@@ -1,6 +1,8 @@
 import { app, icon } from './wii.js';
 import { rutas, NAV, rolPage } from './rutas.js';
-import { Mensaje, wiAuth, superFun } from './widev.js';
+import { Mensaje, wiAuth } from './widev.js';
+import { auth } from './firebase.js';
+import { onAuthStateChanged } from 'firebase/auth';
 
 // ── LOGO — generado desde wii.js ─────────────────────────────────────────────
 const LOGO = `<a href="/"><i class="fa-solid ${icon}"></i> ${app}</a>`;
@@ -66,36 +68,16 @@ window.addEventListener('winavigate', ({ detail: { norm } }) => renderHeader(wiA
 
 // ── FIREBASE AUTH STATE — detecta pérdida de sesión en tiempo real (multi-pestaña) ──────────────
 const _salir = () => !window.isRel && (window.isRel = 1) &&
-  import('./todos/login.js').then(m => m.salir(['wiTema', 'wiSmart']).then(() => location.reload()));
+  import('./estados.js').then(m => m.salir(['wiTema', 'wiSmart']).then(() => location.reload()));
 
-superFun(async () => {
-  const [{ auth }, { onAuthStateChanged }] = await Promise.all([import('./firebase.js'), import('firebase/auth')]);
-  onAuthStateChanged(auth, u => !u && wiAuth.user && _salir());
-});
+onAuthStateChanged(auth, u => !u && wiAuth.user && _salir());
 
 window.addEventListener('storage', e => (!e.key || e.key === 'wiSmile') && location.reload());
 
 // ── EVENTOS GLOBALES ──────────────────────────────────────────────────────────
 document.addEventListener('click', async (e) => {
   if (e.target.closest('.bt_salir')) {
-    const { salir } = await import('./todos/login.js');
+    const { salir } = await import('./estados.js');
     salir(['wiTema', 'wiSmart']);
-  }
-});
-
-const prefetchLogin = (e) => {
-  if (e.target.closest('.bt_auth')) {
-    import('./todos/login.js');
-  }
-};
-document.addEventListener('mouseover', prefetchLogin, { passive: true });
-document.addEventListener('touchstart', prefetchLogin, { passive: true });
-
-document.addEventListener('click', async (e) => {
-  const btn = e.target.closest('.bt_auth');
-  if (btn) {
-    const { abrirLogin } = await import('./todos/login.js');
-    const mode = btn.classList.contains('registrar') ? 'registrar' : 'login';
-    abrirLogin(mode);
   }
 });

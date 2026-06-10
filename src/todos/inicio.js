@@ -99,7 +99,7 @@ export const render = () => `
       </div>
 
       <div class="ini_btns" style="--d:.9s">
-        <a href="/login" class="ini_btn_p"><i class="fas fa-arrow-right-to-bracket"></i> Empezar Gratis</a>
+        <button class="ini_btn_p loginpc"><i class="fas fa-arrow-right-to-bracket"></i> Empezar Gratis</button>
       </div>
 
     </div>
@@ -146,7 +146,7 @@ export const render = () => `
               <label style="font-size: 0.7rem; font-weight: 700; color: var(--tx2); text-align: left;">Probar Simulador de Conexión:</label>
               <input type="text" id="widget_input_nombre" value="Laptop Oficina" placeholder="Nombre de tu PC" style="font-size: 0.8rem; padding: 0.8vh 1.2vh; border-radius: 6px; border: 1px solid var(--brd); background: var(--inp); color: var(--tx);" />
             </div>
-            <a href="/login" class="ini_btn_p" style="padding: 1vh; font-size: 0.8rem; text-align: center; border-radius: 6px;"><i class="fas fa-play"></i> Iniciar Conexión</a>
+            <button class="ini_btn_p loginpc" style="padding: 1vh; font-size: 0.8rem; text-align: center; border-radius: 6px;"><i class="fas fa-play"></i> Iniciar Conexión</button>
           </div>
         </div>
       </div>
@@ -183,7 +183,7 @@ export const render = () => `
       <h2>Comienza a controlar tus equipos de forma remota hoy</h2>
       <p>Regístrate en segundos y descubre la fluidez de transmisión a 60 FPS sin configuraciones complejas.</p>
       <div class="ini_cta_chips">
-        <a href="/login" class="ini_btn_p"><i class="fas fa-arrow-right-to-bracket"></i> Empezar Gratis</a>
+        <button class="ini_btn_p loginpc"><i class="fas fa-arrow-right-to-bracket"></i> Empezar Gratis</button>
       </div>
     </div>
   </section>
