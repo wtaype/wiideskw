@@ -9,7 +9,8 @@ import { wiAuth } from './widev.js';
 // Mapeo de colecciones a escuchar. Para agregar una nueva, añade un objeto al array:
 // Ejemplo: { coleccion: 'accesos', estadoKey: 'accesoComputadora' }
 const CONFIG_LISTENERS = [
-  { coleccion: 'lab', estadoKey: 'labComando' }
+  { coleccion: 'lab',     estadoKey: 'labComando' },
+  { coleccion: 'control', estadoKey: 'controlPC'  }
 ];
 
 const _estado = {};
@@ -17,7 +18,7 @@ CONFIG_LISTENERS.forEach(cfg => {
   _estado[cfg.estadoKey] = { cmd: '—', index: 0 };
 });
 
-const onUpdateGeneral = (estadoKey, data, isInitial) => {
+const actualizadorGeneral = (estadoKey, data, isInitial) => {
   if (isInitial) return;
 
   switch (estadoKey) {
@@ -25,6 +26,17 @@ const onUpdateGeneral = (estadoKey, data, isInitial) => {
       const cmd = data.comando;
       if (cmd && cmd !== 'ninguno' && cmd !== '—') {
         reproducirSonido(cmd);
+      }
+      break;
+    }
+    case 'controlPC': {
+      const cmd    = data.comando;
+      const estado = data.estado;
+      if (cmd && cmd !== 'ninguno' && cmd !== '—') {
+        console.log(`[Estados] Control PC — comando pendiente: ${cmd}`);
+      }
+      if (estado && estado !== 'ninguno' && estado !== '—') {
+        console.log(`[Estados] Control PC — estado actual: ${estado}`);
       }
       break;
     }
@@ -95,7 +107,7 @@ wiAuth.on((user) => {
           [estadoKey]: { ...data, index: nuevoIndex }
         });
 
-        onUpdateGeneral(estadoKey, data, isInitial);
+        actualizadorGeneral(estadoKey, data, isInitial);
         isInitial = false;
       });
       unsubs.push(unsub);

@@ -4,6 +4,7 @@ pub mod capturas;
 pub mod input;
 pub mod webrtc;
 pub mod config;
+pub mod lab1;
 
 #[tauri::command]
 fn abrir_navegador(url: String) -> Result<(), String> {
@@ -216,7 +217,8 @@ pub fn run() {
             inyectar_click,
             abrir_navegador,
             cambiar_color_titulo,
-            lib_genial
+            lib_genial,
+            lab1::lib_genial_lab1
         ])
         .run(tauri::generate_context!())
         .expect("error al iniciar wiidesk");

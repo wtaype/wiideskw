@@ -3,7 +3,7 @@ import { getls, savels, Notificacion, wiSpin, wicopy, wiAuth } from '../widev.js
 import { app } from '../wii.js';
 import { rutas } from '../rutas.js';
 import { db } from '../firebase.js';
-import { doc, setDoc, getDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, onSnapshot, collection, query, where, getDocs } from 'firebase/firestore';
 
 // Configuración local por defecto (si no estamos en Tauri)
 let configLocal = {
@@ -25,11 +25,6 @@ let cargandoPower = false;
 let hostsRemotos = [];
 let cargandoHosts = true;
 let hostIdUnico = '';
-let controlCelularHabilitado = false;
-
-// Intervalo y desuscripción para limpieza
-let intervalHeartbeat = null;
-let unsubControl = null;
 
 const obtenerUsuario = () => getls('wiSmile') || null;
 
@@ -140,24 +135,18 @@ export const render = () => {
                 <span class="wd_host_val wd_host_mac" id="local-mac" title="Copiar MAC">${configLocal.mac_address}</span>
               </div>
               <div class="wd_host_row">
-                <span class="wd_host_label">Estado Wake-on-LAN:</span>
+                <span class="wd_host_label">Encendido por Red:</span>
                 <span class="wd_badge ${wolHabilitado ? 'wd_badge_online' : 'wd_badge_offline'}" id="local-wol-badge">
-                  ${wolHabilitado ? 'WoL Activo' : 'WoL Inactivo'}
-                </span>
-              </div>
-              <div class="wd_host_row">
-                <span class="wd_host_label">Control Celular:</span>
-                <span class="wd_badge ${controlCelularHabilitado ? 'wd_badge_online' : 'wd_badge_offline'}" id="control-celular-badge">
-                  ${controlCelularHabilitado ? 'Activo' : 'Inactivo'}
+                  ${wolHabilitado ? 'Activo' : 'Inactivo'}
                 </span>
               </div>
             </div>
 
             <div class="wd_local_actions">
               <button class="wd_btn wd_btn_primary" id="btn-toggle-wol">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Activar WoL Automático
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Activar Encendido por Red
               </button>
-              
+
               <div class="wd_local_actions_grid">
                 <button class="wd_btn wd_btn_secondary" id="btn-suspender-local">
                   <i class="fa-solid fa-moon"></i> Suspender PC
@@ -166,19 +155,6 @@ export const render = () => {
                   <i class="fa-solid fa-power-off"></i> Apagar PC
                 </button>
               </div>
-            </div>
-
-            <!-- VINCULACIÓN CON CELULAR (DIRECTA POR FIRESTORE) -->
-            <div class="wd_pairing_box">
-              <h3 class="wd_pairing_title">Control Celular</h3>
-              <p class="wd_pairing_desc">
-                Registra este equipo en la nube para poder encenderlo, apagarlo o suspenderlo directamente desde la aplicación móvil de Wiidesk.
-              </p>
-              
-              <button class="wd_btn ${controlCelularHabilitado ? 'wd_btn_danger' : 'wd_btn_primary'} wd_pairing_btn" id="btn-crear-control-celular">
-                <i class="fa-solid ${controlCelularHabilitado ? 'fa-link-slash' : 'fa-mobile-screen-button'}"></i> 
-                <span>${controlCelularHabilitado ? 'Detener encendido remoto en este PC' : 'Activar encendido remoto en este PC'}</span>
-              </button>
             </div>
 
           </div>
@@ -198,77 +174,7 @@ export const render = () => {
   `;
 };
 
-const cleanupControlRemoto = () => {
-  if (intervalHeartbeat) {
-    clearInterval(intervalHeartbeat);
-    intervalHeartbeat = null;
-  }
-  if (unsubControl) {
-    unsubControl();
-    unsubControl = null;
-  }
-};
 
-const actualizarUIControlCelular = () => {
-  const badge = document.getElementById('control-celular-badge');
-  if (badge) {
-    badge.textContent = controlCelularHabilitado ? 'Activo' : 'Inactivo';
-    badge.className = controlCelularHabilitado ? 'wd_badge wd_badge_online' : 'wd_badge wd_badge_offline';
-  }
-  
-  const btn = document.getElementById('btn-crear-control-celular');
-  if (btn) {
-    if (controlCelularHabilitado) {
-      btn.className = 'wd_btn wd_btn_danger wd_pairing_btn';
-      btn.innerHTML = '<i class="fa-solid fa-link-slash"></i> Detener encendido remoto en este PC';
-    } else {
-      btn.className = 'wd_btn wd_btn_primary wd_pairing_btn';
-      btn.innerHTML = '<i class="fa-solid fa-mobile-screen-button"></i> Activar encendido remoto en este PC';
-    }
-  }
-};
-
-const handleToggleControlCelular = async (e) => {
-  const btn = e.currentTarget;
-  const user = obtenerUsuario();
-  if (!user) return;
-
-  if (controlCelularHabilitado) {
-    // Desactivar
-    controlCelularHabilitado = false;
-    savels('wiControlCelular', 'false');
-    cleanupControlRemoto();
-    
-    if (db) {
-      try {
-        const docId = `${user.usuario.trim().toLowerCase()}_${configLocal.dispositivo_nombre.trim().toLowerCase()}`;
-        const docRef = doc(db, 'control', docId);
-        await deleteDoc(docRef);
-        Notificacion('Control celular desactivado y removido de la nube', 'info');
-      } catch (err) {
-        console.error('Error al borrar control celular de Firestore:', err);
-      }
-    }
-    actualizarUIControlCelular();
-  } else {
-    // Activar
-    controlCelularHabilitado = true;
-    savels('wiControlCelular', 'true');
-    actualizarUIControlCelular();
-    
-    Notificacion('Registrando equipo en Firestore...', 'info');
-    try {
-      await iniciarControlRemoto(user);
-      Notificacion('¡Control celular activado y registrado con éxito!', 'success');
-    } catch (err) {
-      console.error(err);
-      controlCelularHabilitado = false;
-      savels('wiControlCelular', 'false');
-      actualizarUIControlCelular();
-      Notificacion('Error al registrar equipo en Firestore. Revisa tu conexión/reglas.', 'error');
-    }
-  }
-};
 
 // Carga la lista de equipos remotos del usuario
 const cargarEquiposRemotos = async (ownerUid) => {
@@ -363,29 +269,28 @@ const handleToggleWol = async (e) => {
   try {
     await invocarTauri('activar_wol');
     wolHabilitado = true;
-    
+
     const badge = document.getElementById('local-wol-badge');
     if (badge) {
-      badge.textContent = 'WoL Activo';
+      badge.textContent = 'Activo';
       badge.className = 'wd_badge wd_badge_online';
     }
-    
-    Notificacion('Wake-on-LAN configurado automáticamente con éxito', 'success');
+
+    Notificacion('Encendido por Red configurado con éxito', 'success');
   } catch (err) {
-    console.error('Error activando WoL:', err);
-    // Intentar verificar el estado real de nuevo
+    console.error('Error activando Encendido por Red:', err);
     try {
       wolHabilitado = await invocarTauri('verificar_wol');
     } catch(e) {}
-    
+
     if (wolHabilitado) {
-      Notificacion('Wake-on-LAN ya se encuentra habilitado', 'info');
+      Notificacion('Encendido por Red ya se encuentra habilitado', 'info');
     } else {
-      Notificacion('No se pudo activar WoL automáticamente. Ejecuta la app como Administrador.', 'warning');
+      Notificacion('No se pudo activar. Ejecuta la app como Administrador.', 'warning');
     }
   } finally {
     cargandoWol = false;
-    wiSpin(btn, false, 'Activar WoL Automático');
+    wiSpin(btn, false, 'Activar Encendido por Red');
   }
 };
 
@@ -464,82 +369,7 @@ const handleDashboardClick = async (e) => {
   }
 };
 
-// Inicia el registro, latido y listener de comandos del equipo local en Firestore
-const iniciarControlRemoto = async (user) => {
-  if (!db || !user || !user.usuario) return;
-  
-  try {
-    const docId = `${user.usuario.trim().toLowerCase()}_${configLocal.dispositivo_nombre.trim().toLowerCase()}`;
-    const docRef = doc(db, 'control', docId);
-    
-    // Registrar o actualizar información inicial del equipo
-    const docSnap = await getDoc(docRef);
-    const datos = {
-      id: docId,
-      uid: user.uid || '',
-      usuario: user.usuario,
-      equipo: configLocal.dispositivo_nombre,
-      ipLocal: configLocal.ip_local || '',
-      ipBroadcast: configLocal.ip_broadcast || '',
-      macAddress: configLocal.mac_address || '',
-      actualizado: serverTimestamp()
-    };
-    
-    if (!docSnap.exists()) {
-      datos.creado = serverTimestamp();
-      datos.pin = false;
-      datos.comando = 'ninguno';
-    }
-    
-    await setDoc(docRef, datos, { merge: true });
-    
-    // Iniciar latido (heartbeat) cada 30 segundos (optimizado para reducir escrituras)
-    if (intervalHeartbeat) clearInterval(intervalHeartbeat);
-    intervalHeartbeat = setInterval(async () => {
-      try {
-        await setDoc(docRef, { actualizado: serverTimestamp() }, { merge: true });
-      } catch (e) {
-        console.error('Error enviando latido:', e);
-      }
-    }, 30000); // 30 segundos
-    
-    // Escuchar comandos remotos
-    if (unsubControl) unsubControl();
-    unsubControl = onSnapshot(docRef, async (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        if (data.comando && data.comando !== 'ninguno') {
-          const cmd = data.comando;
-          // Limpiar el comando inmediatamente en Firestore
-          try {
-            await setDoc(docRef, { comando: 'ninguno' }, { merge: true });
-          } catch (e) {
-            console.error('Error reseteando comando:', e);
-          }
-          
-          if (cmd === 'apagar') {
-            console.log('Comando de apagado remoto recibido.');
-            try {
-              await invocarTauri('apagar_equipo');
-            } catch (err) {
-              console.error('Error llamando a apagar_equipo:', err);
-            }
-          } else if (cmd === 'suspender') {
-            console.log('Comando de suspensión remoto recibido.');
-            try {
-              await invocarTauri('suspender_equipo');
-            } catch (err) {
-              console.error('Error llamando a suspender_equipo:', err);
-            }
-          }
-        }
-      }
-    });
-  } catch (err) {
-    console.error('Error al inicializar el control remoto:', err);
-    throw err;
-  }
-};
+
 
 export const init = async () => {
   const user = obtenerUsuario();
@@ -550,21 +380,19 @@ export const init = async () => {
   cargandoHosts = true;
   cargandoWol = false;
   cargandoPower = false;
-  controlCelularHabilitado = getls('wiControlCelular') === 'true';
-  actualizarUIControlCelular();
 
   // Cargar configuración real desde Tauri si está disponible
   try {
     const configTauri = await invocarTauri('obtener_config');
     if (configTauri) {
       configLocal = configTauri;
-      
+
       const elHostName = document.getElementById('local-hostname');
       if (elHostName) elHostName.textContent = configLocal.dispositivo_nombre;
-      
+
       const elIp = document.getElementById('local-ip');
       if (elIp) elIp.textContent = configLocal.ip_local;
-      
+
       const elMac = document.getElementById('local-mac');
       if (elMac) elMac.textContent = configLocal.mac_address;
     }
@@ -572,16 +400,16 @@ export const init = async () => {
     console.log('Utilizando config local fallback (no Tauri WebView)');
   }
 
-  // Verificar WoL desde Tauri
+  // Verificar estado Encendido por Red desde Tauri
   try {
     wolHabilitado = await invocarTauri('verificar_wol');
     const badge = document.getElementById('local-wol-badge');
     if (badge) {
-      badge.textContent = wolHabilitado ? 'WoL Activo' : 'WoL Inactivo';
+      badge.textContent = wolHabilitado ? 'Activo' : 'Inactivo';
       badge.className = wolHabilitado ? 'wd_badge wd_badge_online' : 'wd_badge wd_badge_offline';
     }
   } catch (err) {
-    console.log('No se pudo verificar WoL (no Tauri)');
+    console.log('No se pudo verificar Encendido por Red (no Tauri)');
   }
 
   // Vincular eventos
@@ -594,15 +422,7 @@ export const init = async () => {
   const btnApagar = document.getElementById('btn-apagar-local');
   if (btnApagar) btnApagar.addEventListener('click', handleApagarLocal);
 
-  const btnCrearControl = document.getElementById('btn-crear-control-celular');
-  if (btnCrearControl) btnCrearControl.addEventListener('click', handleToggleControlCelular);
-
   document.addEventListener('click', handleDashboardClick);
-
-  // Si está habilitado localmente, iniciar latido y listener de comandos
-  if (controlCelularHabilitado) {
-    await iniciarControlRemoto(user);
-  }
 
   // Cargar hosts remotos de Firestore
   cargarEquiposRemotos(user.uid);
@@ -612,8 +432,6 @@ export const init = async () => {
 };
 
 export const cleanup = () => {
-  cleanupControlRemoto();
-  
   const btnToggleWol = document.getElementById('btn-toggle-wol');
   if (btnToggleWol) btnToggleWol.removeEventListener('click', handleToggleWol);
 
@@ -622,9 +440,6 @@ export const cleanup = () => {
 
   const btnApagar = document.getElementById('btn-apagar-local');
   if (btnApagar) btnApagar.removeEventListener('click', handleApagarLocal);
-
-  const btnCrearControl = document.getElementById('btn-crear-control-celular');
-  if (btnCrearControl) btnCrearControl.removeEventListener('click', handleToggleControlCelular);
 
   document.removeEventListener('click', handleDashboardClick);
 };

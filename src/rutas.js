@@ -27,6 +27,7 @@ export const NAV = {
       { href: '/pc2web',    ico: 'fa-globe',            txt: 'PC a Web' },
       { href: '/movil2pc',  ico: 'fa-mobile-alt',       txt: 'Móvil a PC' },
       { href: '/lab',  ico: 'fa-heart',       txt: 'Lab' },
+      { href: '/lab1',  ico: 'fa-microscope',       txt: 'Lab 1 RTDB' },
       ...COMUN,
     ],
     nvright: [
@@ -74,6 +75,7 @@ export const RUTAS = [
   { path: '/feedback',   area: 'todos/acerca/' },
   { path: '/contacto',   area: 'todos/acerca/' },
   { path: '/lab',    area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/lab1',   area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
   { path: '/smile',    area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
   { path: '/notas',    area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
   { path: '/perfil',   area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
