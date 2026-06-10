@@ -147,6 +147,10 @@ export const render = () => {
                 <i class="fa-solid fa-wand-magic-sparkles"></i> Activar Encendido por Red
               </button>
 
+              <button class="wd_btn wd_btn_secondary" id="btn-actualizar-red">
+                <i class="fa-solid fa-arrows-rotate"></i> Actualizar Datos de Red
+              </button>
+
               <div class="wd_local_actions_grid">
                 <button class="wd_btn wd_btn_secondary" id="btn-suspender-local">
                   <i class="fa-solid fa-moon"></i> Suspender PC
@@ -260,6 +264,58 @@ const actualizarVistaHosts = () => {
 };
 
 // Handlers de botones locales
+let cargandoRed = false;
+
+const handleActualizarRed = async (e) => {
+  const btn = e?.currentTarget;
+  if (cargandoRed) return;
+  cargandoRed = true;
+  if (btn) wiSpin(btn, true, 'Actualizando...');
+
+  try {
+    const configTauri = await invocarTauri('escanear_red_actual');
+    if (configTauri) {
+      configLocal = configTauri;
+
+      // Actualizar UI local
+      const elIp = document.getElementById('local-ip');
+      if (elIp) elIp.textContent = configLocal.ip_local;
+
+      const elMac = document.getElementById('local-mac');
+      if (elMac) elMac.textContent = configLocal.mac_address;
+
+      // Actualizar Firestore
+      const user = obtenerUsuario();
+      if (db && user?.usuario) {
+        const nombrePC = configLocal.dispositivo_nombre || 'mi-pc';
+        const docId = `${user.usuario.trim().toLowerCase()}_${nombrePC.toLowerCase()}`;
+        const docRef = doc(db, 'control', docId);
+
+        await setDoc(docRef, {
+          ipLocal: configLocal.ip_local,
+          macAddress: configLocal.mac_address,
+          ipBroadcast: configLocal.ip_broadcast,
+        }, { merge: true });
+
+        console.log(`[Smile] Red Sincronizada en Firestore: IP=${configLocal.ip_local}, MAC=${configLocal.mac_address}`);
+      }
+
+      if (e) Notificacion(`¡Red actualizada! IP: ${configLocal.ip_local}`, 'success');
+    } else {
+      throw new Error('No se recibió configuración válida del backend');
+    }
+  } catch (err) {
+    console.error('Error al actualizar datos de red:', err);
+    if (e) {
+      const msg = err.message || err.toString() || 'Error desconocido';
+      Notificacion(`Error al actualizar red: ${msg}`, 'error');
+    }
+  } finally {
+    cargandoRed = false;
+    if (btn) wiSpin(btn, false, 'Actualizar Datos de Red');
+  }
+};
+
 const handleToggleWol = async (e) => {
   const btn = e.currentTarget;
   if (cargandoWol) return;
@@ -395,6 +451,11 @@ export const init = async () => {
 
       const elMac = document.getElementById('local-mac');
       if (elMac) elMac.textContent = configLocal.mac_address;
+
+      // Escaneo y sincronización automática de red al arrancar
+      setTimeout(() => {
+        handleActualizarRed(null);
+      }, 500);
     }
   } catch (err) {
     console.log('Utilizando config local fallback (no Tauri WebView)');
@@ -416,6 +477,9 @@ export const init = async () => {
   const btnToggleWol = document.getElementById('btn-toggle-wol');
   if (btnToggleWol) btnToggleWol.addEventListener('click', handleToggleWol);
 
+  const btnActualizarRed = document.getElementById('btn-actualizar-red');
+  if (btnActualizarRed) btnActualizarRed.addEventListener('click', handleActualizarRed);
+
   const btnSuspender = document.getElementById('btn-suspender-local');
   if (btnSuspender) btnSuspender.addEventListener('click', handleSuspenderLocal);
 
@@ -434,6 +498,9 @@ export const init = async () => {
 export const cleanup = () => {
   const btnToggleWol = document.getElementById('btn-toggle-wol');
   if (btnToggleWol) btnToggleWol.removeEventListener('click', handleToggleWol);
+
+  const btnActualizarRed = document.getElementById('btn-actualizar-red');
+  if (btnActualizarRed) btnActualizarRed.removeEventListener('click', handleActualizarRed);
 
   const btnSuspender = document.getElementById('btn-suspender-local');
   if (btnSuspender) btnSuspender.removeEventListener('click', handleSuspenderLocal);

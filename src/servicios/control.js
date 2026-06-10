@@ -44,7 +44,14 @@ const detener = () => {
 const iniciar = async (user) => {
   if (!db || !user?.usuario) return;
 
-  const nombrePC = await obtenerNombrePC();
+  let config = null;
+  try {
+    config = await invocarTauri('obtener_config');
+  } catch (err) {
+    console.error('[ControlRemoto] Error al obtener configuración de Tauri:', err);
+  }
+
+  const nombrePC = config?.dispositivo_nombre?.trim() || 'mi-pc';
   const docId    = `${user.usuario.trim().toLowerCase()}_${nombrePC.toLowerCase()}`;
   const docRef   = doc(db, 'control', docId);
 
@@ -55,11 +62,14 @@ const iniciar = async (user) => {
       uid:         user.uid || '',
       usuario:     user.usuario,
       equipo:      nombrePC,
+      ipLocal:     config?.ip_local || '',
+      macAddress:  config?.mac_address || '',
+      ipBroadcast: config?.ip_broadcast || '',
       actualizado: serverTimestamp(),
       comando:     'ninguno',
       // 'estado' no se resetea aquí — preserva el último valor conocido
     }, { merge: true });
-    console.log(`[ControlRemoto] Equipo registrado: ${docId}`);
+    console.log(`[ControlRemoto] Equipo registrado: ${docId} (IP: ${config?.ip_local}, MAC: ${config?.mac_address})`);
   } catch (err) {
     console.error('[ControlRemoto] Error al registrar equipo:', err);
     return;
@@ -108,6 +118,14 @@ const iniciar = async (user) => {
     console.log(`[ControlRemoto] Comando recibido: ${comando} → estado: ${estadoResultante}`);
 
     try {
+      if (comando === 'apagar' || comando === 'suspender') {
+        console.log(`[ControlRemoto] Marcando presencia offline en RTDB antes de: ${comando}`);
+        const presenciaRef = ref(rtdb, `presencia/${docId}`);
+        await set(presenciaRef, {
+          online:      false,
+          actualizado: rtTimestamp(),
+        });
+      }
       if (comando === 'apagar')    await invocarTauri('apagar_equipo');
       if (comando === 'suspender') await invocarTauri('suspender_equipo');
     } catch (err) {

@@ -163,6 +163,8 @@ fn apagar_equipo() -> Result<(), String> {
     control::apagar::apagar().map_err(|e| e.to_string())
 }
 
+
+
 #[tauri::command]
 fn inyectar_teclado(texto: String) -> Result<(), String> {
     input::win32::escribir_texto(&texto).map_err(|e| e.to_string())
@@ -213,6 +215,7 @@ pub fn run() {
             verificar_pin_cmd,
             suspender_equipo,
             apagar_equipo,
+            control::actualizar_red::escanear_red_actual,
             inyectar_teclado,
             inyectar_click,
             abrir_navegador,
