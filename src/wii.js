@@ -10,16 +10,16 @@ export let lanzamiento = 2026;
 export let by = '@wilder.taype';
 export let linkme = 'https://wtaype.github.io/';
 export let ipdev = import.meta.env.VITE_DEV;
-export let version = 'v11'; // Siempre va "v" para estructur
+export let version = 'v12'; // Siempre va "v" para estructur
 
 /** ACTUALIZAR AL TAG POR SEGURIDAD [TAG NUEVO] (1)
-git tag v11 -m "Version v11" ; git push origin v11 
+git tag v12 -m "Version v12" ; git push origin v12 
 
 ACTUALIZACIÓN AL MAIN PRINCIPAL DEL PROYECTO [MAIN] (2)
-git add . ; git commit -m "Actualizacion Principal v11.10.10" ; git push origin main
+git add . ; git commit -m "Actualizacion Principal v12.10.10" ; git push origin main
 
 // REEMPLAZAR TAG DE SEGURIDAD EXISTENTE [TAG REMPLAZO] (3)
-git tag -d v11 ; git tag v11 -m "Version v11 actualizada" ; git push origin v11 --force
+git tag -d v12 ; git tag v12 -m "Version v12 actualizada" ; git push origin v12 --force
 
 // Actualizar versiones de seguridad [ELIMINAR CARPETA - ARCHIVO ONLINE] (4)
 git rm --cached src/usuarios/smile.js ; git commit -m "Archivo Eliminado" ; git push origin main

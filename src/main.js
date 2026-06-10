@@ -1,7 +1,6 @@
 import { getls, wiSmart } from './widev.js';
 import { rutas } from './rutas.js';
 import './todos/loginpc.js';
-import './servicios.js';
 
 // ── RUTAS PROFESIONAL DE ACUERDO A ROLES  ─────────────────────────────
 rutas.registerAll(() => getls('wiSmile')?.rol);
