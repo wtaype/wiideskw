@@ -1,7 +1,6 @@
-// usuarios/servicios/equipos.js — Servicio de fondo: presencia en RTDB y comandos Firestore
-import { auth, rtdb, db } from '../../firebase.js';
-import { ref, set, onDisconnect, serverTimestamp as rtTimestamp } from 'firebase/database';
-import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
+// usuarios/servicios/equipos.js — Servicio de fondo: comandos y presencia en RTDB
+import { auth, rtdb } from '../../firebase.js';
+import { ref, set, onDisconnect, onValue, serverTimestamp as rtTimestamp } from 'firebase/database';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getls } from '../../widev.js';
 
@@ -13,26 +12,30 @@ const invocarTauri = async (cmd, args = {}) => {
 };
 
 let _idEquipoActual = null;
-let _unsubFirestore = null;
+let _usuarioActual = null;
+let _unsubRTDB = null;
 
 const detener = async () => {
-  if (_unsubFirestore) {
-    _unsubFirestore();
-    _unsubFirestore = null;
+  if (_unsubRTDB) {
+    _unsubRTDB();
+    _unsubRTDB = null;
   }
-  if (_idEquipoActual && rtdb) {
+  if (_idEquipoActual && _usuarioActual && rtdb) {
     try {
-      const presenciaRef = ref(rtdb, `presencia/${_idEquipoActual}`);
+      const presenciaRef = ref(rtdb, `encendido/${_usuarioActual}/${_idEquipoActual}`);
       await set(presenciaRef, {
         online:      false,
+        estado:      'apagado',
+        comando:     'ninguno',
         actualizado: rtTimestamp(),
       });
       console.log(`[Equipos] Presencia marcada offline para: ${_idEquipoActual}`);
     } catch (err) {
       console.error('[Equipos] Error al desactivar presencia en detener:', err);
     }
-    _idEquipoActual = null;
   }
+  _idEquipoActual = null;
+  _usuarioActual = null;
   console.log('[Equipos] Servicio detenido.');
 };
 
@@ -62,17 +65,22 @@ const iniciar = async (user) => {
   const usuarioSanitizado = (user.usuario || 'user').trim().toLowerCase().replace(/[@.]/g, '_');
   const idEquipo = `${usuarioSanitizado}_${nombrePC.toLowerCase()}`;
   _idEquipoActual = idEquipo;
+  _usuarioActual = usuarioSanitizado;
 
   // 1. Presencia en tiempo real via RTDB (sin heartbeat)
   if (rtdb) {
     try {
-      const presenciaRef = ref(rtdb, `presencia/${idEquipo}`);
+      const presenciaRef = ref(rtdb, `encendido/${usuarioSanitizado}/${idEquipo}`);
       await onDisconnect(presenciaRef).set({
         online:      false,
+        estado:      'apagado',
+        comando:     'ninguno',
         actualizado: rtTimestamp(),
       });
       await set(presenciaRef, {
         online:      true,
+        estado:      'encendido',
+        comando:     'ninguno',
         actualizado: rtTimestamp(),
       });
       console.log(`[Equipos] Presencia RTDB activa para: ${idEquipo}`);
@@ -81,48 +89,50 @@ const iniciar = async (user) => {
     }
   }
 
-  // 2. Escucha de comandos en tiempo real desde Firestore
-  if (db) {
+  // 2. Escucha de comandos en tiempo real desde RTDB
+  if (rtdb) {
     try {
-      const equipoDocRef = doc(db, 'equipos', idEquipo);
-      _unsubFirestore = onSnapshot(equipoDocRef, async (snapshot) => {
-        if (!snapshot.exists()) return;
-        const data = snapshot.data();
-        const cmd = data.comando;
+      const comandoRef = ref(rtdb, `encendido/${usuarioSanitizado}/${idEquipo}/comando`);
+      _unsubRTDB = onValue(comandoRef, async (snapshot) => {
+        const cmd = snapshot.val();
         if (cmd && cmd !== 'ninguno') {
-          console.log(`[Equipos] Comando remoto recibido desde Firestore: ${cmd}`);
+          console.log(`[Equipos] Comando remoto recibido desde RTDB: ${cmd}`);
           
-          // Resetear el comando a 'ninguno' en Firestore (Handshake rápido)
+          // Resetear el comando a 'ninguno' en RTDB (Handshake rápido en RTDB para evitar bucles)
+          let resetExitoso = false;
           try {
-            await updateDoc(equipoDocRef, { comando: 'ninguno' });
-            console.log('[Equipos] Comando reseteado a "ninguno" en Firestore');
+            await set(comandoRef, 'ninguno');
+            console.log('[Equipos] Handshake: Comando reseteado a "ninguno" en RTDB con éxito.');
+            resetExitoso = true;
           } catch (err) {
-            console.error('[Equipos] Error al resetear comando en Firestore:', err);
+            console.error('[Equipos] Error crítico al resetear comando en RTDB. Cancelando ejecución nativa.', err);
           }
 
-          // Ejecutar el comando nativo correspondiente en Rust
-          try {
-            if (cmd === 'apagar') {
-              console.log('[Equipos] Ejecutando comando apagar_equipo...');
-              await invocarTauri('apagar_equipo');
-            } else if (cmd === 'suspender') {
-              console.log('[Equipos] Ejecutando comando suspender_equipo...');
-              await invocarTauri('suspender_equipo');
+          // Ejecutar el comando nativo correspondiente en Rust solo si el reseteo fue exitoso
+          if (resetExitoso) {
+            try {
+              if (cmd === 'apagar') {
+                console.log('[Equipos] Ejecutando comando apagar_equipo...');
+                await invocarTauri('apagar_equipo');
+              } else if (cmd === 'suspender') {
+                console.log('[Equipos] Ejecutando comando suspender_equipo...');
+                await invocarTauri('suspender_equipo');
+              }
+            } catch (err) {
+              console.error(`[Equipos] Error al ejecutar comando nativo (${cmd}):`, err);
             }
-          } catch (err) {
-            console.error(`[Equipos] Error al ejecutar comando nativo (${cmd}):`, err);
           }
         }
       }, (err) => {
-        console.error('[Equipos] Error en listener de comandos de Firestore:', err);
+        console.error('[Equipos] Error en listener de comandos de RTDB:', err);
       });
-      console.log(`[Equipos] Listener de comandos Firestore activo para: ${idEquipo}`);
+      console.log(`[Equipos] Listener de comandos RTDB activo para: ${idEquipo}`);
     } catch (err) {
-      console.error('[Equipos] Error al inicializar listener de Firestore:', err);
+      console.error('[Equipos] Error al inicializar listener de RTDB:', err);
     }
   }
 
-  console.log('[Equipos] Servicio activo (Presencia RTDB y Comandos Firestore).');
+  console.log('[Equipos] Servicio activo (Comandos y Presencia en RTDB).');
 };
 
 // ── Arranque automático al detectar sesión ─────────────────────────────────────

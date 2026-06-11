@@ -2,8 +2,8 @@
 import { getls, Notificacion, wiSpin } from '../../widev.js';
 import { rutas } from '../../rutas.js';
 import { db, rtdb } from '../../firebase.js';
-import { doc, getDoc, setDoc, onSnapshot, collection, query, where } from 'firebase/firestore';
-import { ref, onValue } from 'firebase/database';
+import { doc, getDoc, onSnapshot, collection, query, where } from 'firebase/firestore';
+import { ref, onValue, update } from 'firebase/database';
 import { invocarTauri } from './utils.js';
 
 let hostsRemotos = [];
@@ -22,6 +22,65 @@ const limpiarSuscripcionesHosts = () => {
   unsubsRTDBHosts = [];
 };
 
+const generarHtmlDispositivo = (h) => {
+  const esOnline = h.online || false;
+  const estado = h.estado || (esOnline ? 'encendido' : 'apagado');
+  const isTransitioning = estado === 'encendiendo' || estado === 'suspendiendo' || estado === 'apagando';
+
+  const badgeClass = esOnline ? 'wd_badge_online' : 'wd_badge_offline';
+  const icoClass = esOnline ? 'wd_device_ico_online' : 'wd_device_ico_offline';
+  const opacityClass = esOnline ? 'wd_card_online' : 'wd_card_offline';
+  
+  let badgeTexto = esOnline ? 'En Línea' : 'Desconectado';
+  let badgeIcon = 'fa-circle';
+  let currentBadgeClass = badgeClass;
+  
+  if (isTransitioning) {
+    currentBadgeClass = 'wd_badge_active';
+    badgeIcon = 'fa-spinner fa-spin';
+    badgeTexto = estado;
+  }
+  
+  const isEncenderDisabled = esOnline || isTransitioning;
+  const isSuspenderDisabled = !esOnline || isTransitioning;
+  const isApagarDisabled = !esOnline || isTransitioning;
+
+  return `
+    <div class="wd_device_card ${opacityClass}">
+      <div class="wd_device_header">
+        <div class="wd_device_left">
+          <div class="wd_device_ico ${icoClass}">
+            <i class="fa-solid ${h.macAddress ? 'fa-laptop' : 'fa-desktop'}"></i>
+          </div>
+          <div class="wd_device_info">
+            <strong>${h.alias || h.equipo || 'Equipo Sin Nombre'}</strong>
+            <span>IP: ${h.localIp || '—'} | MAC: ${h.macAddress || '—'}</span>
+            <div class="wd_device_badge_container">
+              <span class="wd_badge ${currentBadgeClass}"><i class="fa-solid ${badgeIcon}"></i> ${badgeTexto.toUpperCase()}</span>
+            </div>
+          </div>
+        </div>
+        ${esOnline ? `<button class="wd_btn_icon btn-conectar" data-hostid="${h.idEquipo}" title="Conectar"><i class="fa-solid fa-expand"></i></button>` : ''}
+      </div>
+      
+      <div class="wd_action_buttons_container">
+        <button class="wd_action_btn wd_action_btn_success btn-encender" data-hostid="${h.idEquipo}" data-mac="${h.macAddress}" data-ipb="${h.ipBroadcast || '255.255.255.255'}" ${isEncenderDisabled ? 'disabled' : ''}>
+          <i class="fa-solid fa-power-off"></i>
+          <span>Encender</span>
+        </button>
+        <button class="wd_action_btn wd_action_btn_warning btn-suspender" data-hostid="${h.idEquipo}" ${isSuspenderDisabled ? 'disabled' : ''}>
+          <i class="fa-solid fa-moon"></i>
+          <span>Suspender</span>
+        </button>
+        <button class="wd_action_btn wd_action_btn_error btn-apagar-remoto" data-hostid="${h.idEquipo}" ${isApagarDisabled ? 'disabled' : ''}>
+          <i class="fa-solid fa-power-off"></i>
+          <span>Apagar</span>
+        </button>
+      </div>
+    </div>
+  `;
+};
+
 export const render = () => {
   let htmlHosts = '';
   if (cargandoHosts) {
@@ -38,36 +97,7 @@ export const render = () => {
       </div>
     `;
   } else {
-    htmlHosts = hostsRemotos.map(h => {
-      const esOnline = h.online || false;
-      const badgeClass = esOnline ? 'wd_badge_online' : 'wd_badge_offline';
-      const badgeTexto = esOnline ? 'En Línea' : 'Desconectado';
-      const icoClass = esOnline ? 'wd_device_ico_online' : 'wd_device_ico_offline';
-      
-      return `
-        <div class="wd_device_card">
-          <div class="wd_device_left">
-            <div class="wd_device_ico ${icoClass}">
-              <i class="fa-solid ${h.macAddress ? 'fa-laptop' : 'fa-desktop'}"></i>
-            </div>
-            <div class="wd_device_info">
-              <strong>${h.alias || h.equipo || 'Equipo Sin Nombre'}</strong>
-              <span>IP: ${h.localIp || '—'} | MAC: ${h.macAddress || '—'}</span>
-              <div class="wd_device_badge_container">
-                <span class="wd_badge ${badgeClass}">${badgeTexto}</span>
-              </div>
-            </div>
-          </div>
-          <div class="wd_device_actions">
-            ${esOnline ? 
-              `<button class="wd_btn_icon btn-conectar" data-hostid="${h.idEquipo}" title="Conectar"><i class="fa-solid fa-expand"></i></button>` :
-              `<button class="wd_btn_icon btn-encender" data-mac="${h.macAddress}" data-ipb="${h.ipBroadcast || '255.255.255.255'}" title="Despertar (WoL)"><i class="fa-solid fa-power-off"></i></button>`
-            }
-            <button class="wd_btn_icon wd_btn_icon_danger btn-apagar-remoto" data-hostid="${h.idEquipo}" title="Apagar equipo"><i class="fa-solid fa-circle-minus"></i></button>
-          </div>
-        </div>
-      `;
-    }).join('');
+    htmlHosts = hostsRemotos.map(generarHtmlDispositivo).join('');
   }
 
   return `
@@ -95,36 +125,7 @@ const actualizarVistaHosts = () => {
     return;
   }
 
-  container.innerHTML = hostsRemotos.map(h => {
-    const esOnline = h.online || false;
-    const badgeClass = esOnline ? 'wd_badge_online' : 'wd_badge_offline';
-    const badgeTexto = esOnline ? 'En Línea' : 'Desconectado';
-    const icoClass = esOnline ? 'wd_device_ico_online' : 'wd_device_ico_offline';
-    
-    return `
-      <div class="wd_device_card">
-        <div class="wd_device_left">
-          <div class="wd_device_ico ${icoClass}">
-            <i class="fa-solid ${h.macAddress ? 'fa-laptop' : 'fa-desktop'}"></i>
-          </div>
-          <div class="wd_device_info">
-            <strong>${h.alias || h.equipo || 'Equipo Sin Nombre'}</strong>
-            <span>IP: ${h.localIp || '—'} | MAC: ${h.macAddress || '—'}</span>
-            <div class="wd_device_badge_container">
-              <span class="wd_badge ${badgeClass}">${badgeTexto}</span>
-            </div>
-          </div>
-        </div>
-        <div class="wd_device_actions">
-          ${esOnline ? 
-            `<button class="wd_btn_icon btn-conectar" data-hostid="${h.idEquipo}" title="Conectar"><i class="fa-solid fa-expand"></i></button>` :
-            `<button class="wd_btn_icon btn-encender" data-mac="${h.macAddress}" data-ipb="${h.ipBroadcast || '255.255.255.255'}" title="Despertar (WoL)"><i class="fa-solid fa-power-off"></i></button>`
-          }
-          <button class="wd_btn_icon wd_btn_icon_danger btn-apagar-remoto" data-hostid="${h.idEquipo}" title="Apagar equipo"><i class="fa-solid fa-circle-minus"></i></button>
-        </div>
-      </div>
-    `;
-  }).join('');
+  container.innerHTML = hostsRemotos.map(generarHtmlDispositivo).join('');
 };
 
 const cargarEquiposRemotos = async (userId, localHostName) => {
@@ -144,7 +145,6 @@ const cargarEquiposRemotos = async (userId, localHostName) => {
   const idEquipoLocal = `${usuarioSanitizado}_${localHostName.toLowerCase()}`;
 
   try {
-    // Consultamos la colección 'pcs' que sí es legible con queries de userId bajo las reglas actuales (if conAuth())
     const qPcs = query(collection(db, 'pcs'), where('userId', '==', userId));
     
     unsubFirestoreHosts = onSnapshot(qPcs, async (snapshot) => {
@@ -155,7 +155,6 @@ const cargarEquiposRemotos = async (userId, localHostName) => {
         const pcData = pcDoc.data();
         const idEquipo = pcData.equipoId;
         
-        // Evitamos el host local y hacemos getDoc individual para cada equipo remoto
         if (idEquipo && idEquipo !== idEquipoLocal) {
           const equipDocRef = doc(db, 'equipos', idEquipo);
           promesas.push(
@@ -172,7 +171,6 @@ const cargarEquiposRemotos = async (userId, localHostName) => {
         }
       });
 
-      // Esperar a que se resuelvan todos los getDoc individuales (permitidos por isDueno)
       await Promise.all(promesas);
 
       unsubsRTDBHosts.forEach(unsub => unsub());
@@ -186,11 +184,13 @@ const cargarEquiposRemotos = async (userId, localHostName) => {
       } else {
         hostsRemotos.forEach((host, idx) => {
           if (!rtdb || !host.idEquipo) return;
-          const presenciaRef = ref(rtdb, `presencia/${host.idEquipo}`);
+          const presenciaRef = ref(rtdb, `encendido/${usuarioSanitizado}/${host.idEquipo}`);
           const unsubRTDB = onValue(presenciaRef, (snap) => {
             const val = snap.val();
             if (hostsRemotos[idx]) {
               hostsRemotos[idx].online = val ? !!val.online : false;
+              hostsRemotos[idx].estado = val?.estado || (val?.online ? 'encendido' : 'apagado');
+              hostsRemotos[idx].comando = val?.comando || 'ninguno';
               actualizarVistaHosts();
             }
           });
@@ -224,17 +224,51 @@ const handleRemotosClick = async (e) => {
   if (btnEncender) {
     const mac = btnEncender.getAttribute('data-mac');
     const ipb = btnEncender.getAttribute('data-ipb');
+    const idEquipoRemoto = btnEncender.getAttribute('data-hostid');
     wiSpin(btnEncender, true);
     Notificacion(`Enviando paquete mágico a MAC ${mac}...`, 'info');
     
     try {
       await invocarTauri('enviar_wol', { mac, ipBroadcast: ipb || '255.255.255.255' });
       Notificacion('Paquete Wake-on-LAN enviado con éxito', 'success');
+      if (rtdb && idEquipoRemoto) {
+        const user = obtenerUsuario();
+        if (user) {
+          const usuarioSanitizado = (user.usuario || 'user').trim().toLowerCase().replace(/[@.]/g, '_');
+          const devRef = ref(rtdb, `encendido/${usuarioSanitizado}/${idEquipoRemoto}`);
+          await update(devRef, { estado: 'encendiendo' });
+        }
+      }
     } catch (err) {
       console.error('[Remotos] Error al enviar WoL:', err);
-      Notificacion('Paquete Wake-on-LAN enviado (Simulado)', 'success');
+      Notificacion('Error al enviar paquete Wake-on-LAN', 'error');
     } finally {
       wiSpin(btnEncender, false);
+    }
+    return;
+  }
+
+  // Suspender Remoto
+  const btnSuspender = e.target.closest('.btn-suspender');
+  if (btnSuspender) {
+    const idEquipoRemoto = btnSuspender.getAttribute('data-hostid');
+    if (confirm(`¿Seguro que deseas suspender remotamente el equipo ${idEquipoRemoto}?`)) {
+      if (rtdb) {
+        const user = obtenerUsuario();
+        if (user) {
+          const usuarioSanitizado = (user.usuario || 'user').trim().toLowerCase().replace(/[@.]/g, '_');
+          const devRef = ref(rtdb, `encendido/${usuarioSanitizado}/${idEquipoRemoto}`);
+          try {
+            await update(devRef, { comando: 'suspender', estado: 'suspendiendo' });
+            Notificacion('Comando de suspensión remota enviado con éxito', 'success');
+          } catch (err) {
+            console.error('[Remotos] Error al enviar comando de suspensión remota:', err);
+            Notificacion('Error al suspender el equipo remoto', 'error');
+          }
+        }
+      } else {
+        Notificacion('Base de datos no disponible', 'warning');
+      }
     }
     return;
   }
@@ -244,16 +278,18 @@ const handleRemotosClick = async (e) => {
   if (btnApagarRemoto) {
     const idEquipoRemoto = btnApagarRemoto.getAttribute('data-hostid');
     if (confirm(`¿Seguro que deseas apagar remotamente el equipo ${idEquipoRemoto}?`)) {
-      if (db) {
-        const docRef = doc(db, 'equipos', idEquipoRemoto);
-        try {
-          const user = obtenerUsuario();
-          const uid = user?.userId || user?.uid;
-          await setDoc(docRef, { comando: 'apagar', userId: uid }, { merge: true });
-          Notificacion('Comando de apagado remoto enviado con éxito', 'success');
-        } catch (err) {
-          console.error('[Remotos] Error al enviar comando de apagado remoto:', err);
-          Notificacion('Error al apagar el equipo remoto', 'error');
+      if (rtdb) {
+        const user = obtenerUsuario();
+        if (user) {
+          const usuarioSanitizado = (user.usuario || 'user').trim().toLowerCase().replace(/[@.]/g, '_');
+          const devRef = ref(rtdb, `encendido/${usuarioSanitizado}/${idEquipoRemoto}`);
+          try {
+            await update(devRef, { comando: 'apagar', estado: 'apagando' });
+            Notificacion('Comando de apagado remoto enviado con éxito', 'success');
+          } catch (err) {
+            console.error('[Remotos] Error al enviar comando de apagado remoto:', err);
+            Notificacion('Error al apagar el equipo remoto', 'error');
+          }
         }
       } else {
         Notificacion('Base de datos no disponible', 'warning');
@@ -288,3 +324,4 @@ export const cleanup = () => {
   limpiarSuscripcionesHosts();
   document.removeEventListener('click', handleRemotosClick);
 };
+

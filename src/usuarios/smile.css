@@ -482,3 +482,107 @@
   border-color: var(--mco);
   box-shadow: 0 0 1vh color-mix(in srgb, var(--mco) 20%, transparent);
 }
+
+/* Opacidad dinámica para estado online = true/false */
+.wd_card_offline {
+  opacity: 0.75;
+  filter: grayscale(20%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wd_card_online {
+  opacity: 1;
+  filter: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Contenedor de botones horizontales de control */
+.wd_action_buttons_container {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.2vh;
+  margin-top: 2.5vh;
+  width: 100%;
+}
+
+/* Botón de acción con estilo de la imagen de referencia */
+.wd_action_btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8vh;
+  padding: 1.4vh 1vh;
+  border-radius: 1.2vh;
+  font-size: var(--fz_s3);
+  font-weight: 700;
+  font-family: var(--ff_P);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+}
+
+.wd_action_btn i {
+  font-size: var(--fz_m2);
+}
+
+/* Botón Encender --success */
+.wd_action_btn_success {
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
+  color: var(--success);
+}
+.wd_action_btn_success:hover:not(:disabled) {
+  background: var(--success);
+  color: var(--txa);
+  box-shadow: 0 0.5vh 1.5vh color-mix(in srgb, var(--success) 35%, transparent);
+  transform: translateY(-0.2vh);
+}
+
+/* Botón Suspender --warning */
+.wd_action_btn_warning {
+  background: color-mix(in srgb, #ff9f43 12%, transparent);
+  border: 1px solid color-mix(in srgb, #ff9f43 30%, transparent);
+  color: #ff9f43;
+}
+.wd_action_btn_warning:hover:not(:disabled) {
+  background: #ff9f43;
+  color: var(--txa);
+  box-shadow: 0 0.5vh 1.5vh color-mix(in srgb, #ff9f43 35%, transparent);
+  transform: translateY(-0.2vh);
+}
+
+/* Botón Apagar --error */
+.wd_action_btn_error {
+  background: color-mix(in srgb, var(--error) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--error) 30%, transparent);
+  color: var(--error);
+}
+.wd_action_btn_error:hover:not(:disabled) {
+  background: var(--error);
+  color: var(--txa);
+  box-shadow: 0 0.5vh 1.5vh color-mix(in srgb, var(--error) 35%, transparent);
+  transform: translateY(-0.2vh);
+}
+
+/* Deshabilitados */
+.wd_action_btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Rediseño estructurado de la tarjeta de dispositivo remoto */
+.wd_device_card {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.5vh;
+}
+
+.wd_device_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}

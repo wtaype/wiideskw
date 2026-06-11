@@ -109,6 +109,28 @@ const generarQRConexion = async () => {
   }
 };
 
+const handleLocalSuspender = async () => {
+  try {
+    Notificacion('Suspendiendo equipo local...', 'info');
+    await invocarTauri('suspender_equipo');
+  } catch (err) {
+    console.error('[Local] Error al suspender:', err);
+    Notificacion('Error al suspender el equipo local', 'error');
+  }
+};
+
+const handleLocalApagar = async () => {
+  if (confirm('¿Seguro que deseas apagar esta computadora?')) {
+    try {
+      Notificacion('Apagando equipo local...', 'info');
+      await invocarTauri('apagar_equipo');
+    } catch (err) {
+      console.error('[Local] Error al apagar:', err);
+      Notificacion('Error al apagar el equipo local', 'error');
+    }
+  }
+};
+
 const actualizarVistaLocal = async () => {
   const container = document.getElementById('local-host-card');
   if (!container) return;
@@ -128,16 +150,13 @@ const actualizarVistaLocal = async () => {
     return;
   }
 
-  const badgeClass = estaRegistrado ? 'wd_badge_online' : 'wd_badge_offline';
-  const badgeTexto = estaRegistrado ? 'Sincronizado' : 'Sin Sincronizar';
-  const badgeIco = estaRegistrado ? 'fa-cloud' : 'fa-cloud-slash';
   const btnTexto = estaRegistrado ? 'Sincronizar con la Nube' : 'Registrar en la Nube';
 
   container.innerHTML = `
     <div class="wd_host_details">
       <div class="wd_host_row">
-        <span class="wd_host_label">Estado Nube</span>
-        <span class="wd_badge ${badgeClass}"><i class="fa-solid ${badgeIco}"></i> ${badgeTexto}</span>
+        <span class="wd_host_label">online</span>
+        <span class="wd_badge wd_badge_online"><i class="fa-solid fa-circle"></i> true</span>
       </div>
       <div class="wd_host_row">
         <span class="wd_host_label">Nombre del Host</span>
@@ -166,6 +185,21 @@ const actualizarVistaLocal = async () => {
       </span>
     </div>
 
+    <div class="wd_action_buttons_container">
+      <button class="wd_action_btn wd_action_btn_success" id="local-btn-encender" disabled>
+        <i class="fa-solid fa-power-off"></i>
+        <span>Encender</span>
+      </button>
+      <button class="wd_action_btn wd_action_btn_warning" id="local-btn-suspender">
+        <i class="fa-solid fa-moon"></i>
+        <span>Suspender</span>
+      </button>
+      <button class="wd_action_btn wd_action_btn_error" id="local-btn-apagar">
+        <i class="fa-solid fa-power-off"></i>
+        <span>Apagar</span>
+      </button>
+    </div>
+
     <button id="btn-registrar-local" class="wd_btn wd_btn_primary" style="margin-top: 2.5vh;">
       <i class="fa-solid fa-cloud-arrow-up"></i> ${btnTexto}
     </button>
@@ -186,6 +220,17 @@ const actualizarVistaLocal = async () => {
   const btnReg = document.getElementById('btn-registrar-local');
   if (btnReg) {
     btnReg.addEventListener('click', handleRegistrarLocal);
+  }
+
+  // Registrar click para suspender/apagar locales
+  const btnSuspender = document.getElementById('local-btn-suspender');
+  if (btnSuspender) {
+    btnSuspender.addEventListener('click', handleLocalSuspender);
+  }
+
+  const btnApagar = document.getElementById('local-btn-apagar');
+  if (btnApagar) {
+    btnApagar.addEventListener('click', handleLocalApagar);
   }
 
   // Generar el código QR
@@ -242,5 +287,14 @@ export const cleanup = () => {
   if (btnReg) {
     btnReg.removeEventListener('click', handleRegistrarLocal);
   }
+  const btnSuspender = document.getElementById('local-btn-suspender');
+  if (btnSuspender) {
+    btnSuspender.removeEventListener('click', handleLocalSuspender);
+  }
+  const btnApagar = document.getElementById('local-btn-apagar');
+  if (btnApagar) {
+    btnApagar.removeEventListener('click', handleLocalApagar);
+  }
   localConfig = null;
 };
+
