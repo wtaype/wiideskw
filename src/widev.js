@@ -855,3 +855,11 @@ export const superFun = (() => {
     }
   };
 })();
+
+// ── 27. NAVIGATION HIGHLIGHT: marcarNav ──────────────────────
+export const marcarNav = (ruta = window.location.pathname) => {
+  const norm = wiPath.limpiar(ruta.split('?')[0].split('#')[0]);
+  const pag = norm === '/' ? 'inicio' : norm.slice(1);
+  document.querySelectorAll('.nv_item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll(`.nv_item[data-page="${pag}"]`).forEach(el => el.classList.add('active'));
+};

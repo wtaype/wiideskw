@@ -1,6 +1,6 @@
 import { app, icon } from './wii.js';
 import { rutas, NAV, rolPage } from './rutas.js';
-import { Mensaje, wiAuth } from './widev.js';
+import { Mensaje, wiAuth, marcarNav } from './widev.js';
 import { auth } from './firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -31,6 +31,8 @@ const renderHeader = (wi, ruta = window.location.pathname) => {
 
   const movil_nav = document.querySelector('.movil_nav');
   if (movil_nav) movil_nav.innerHTML = left + right;
+
+  marcarNav(ruta);
 };
 
 // ── MOBILE DRAWER ─────────────────────────────────────────────────────────────

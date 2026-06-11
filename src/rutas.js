@@ -1,5 +1,5 @@
 import { app, titulo, descri, keywii, linkweb } from './wii.js';
-import { Notificacion, wiPath, wiFade } from './widev.js';
+import { Notificacion, wiPath, wiFade, marcarNav } from './widev.js';
 import * as inicioMod from './todos/inicio.js';
 
 export const rolPage = { usuario: '/smile', editor: '/smile', gestor: '/gestor', admin: '/admin' };
@@ -214,9 +214,7 @@ class WiRutas {
   }
 
   marcarNav(norm) {
-    const pag = norm.slice(1) || this.HOME;
-    document.querySelectorAll('.nv_item').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll(`.nv_item[data-page="${pag}"]`).forEach(el => el.classList.add('active'));
+    marcarNav(norm);
   }
 
   init() {
