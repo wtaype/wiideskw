@@ -1,178 +1,72 @@
 // lib.rs — Orquestador central: registra todos los comandos Tauri expuestos al frontend
-pub mod control;
-pub mod capturas;
-pub mod input;
-pub mod webrtc;
-pub mod config;
-pub mod lab1;
+pub mod general;
+pub mod smile;
+pub mod lab;
 
 #[tauri::command]
 fn abrir_navegador(url: String) -> Result<(), String> {
-    println!("--- [TAURI BACKEND] abrir_navegador invocado con URL: {} ---", url);
-    #[cfg(target_os = "windows")]
-    {
-        use std::os::windows::ffi::OsStrExt;
-        let url_wide: Vec<u16> = std::ffi::OsStr::new(&url)
-            .encode_wide()
-            .chain(std::iter::once(0))
-            .collect();
-        let operation_wide: Vec<u16> = std::ffi::OsStr::new("open")
-            .encode_wide()
-            .chain(std::iter::once(0))
-            .collect();
-            
-        unsafe {
-            #[link(name = "shell32")]
-            extern "system" {
-                fn ShellExecuteW(
-                    hwnd: isize,
-                    lp_operation: *const u16,
-                    lp_file: *const u16,
-                    lp_parameters: *const u16,
-                    lp_directory: *const u16,
-                    n_show_cmd: i32,
-                ) -> isize;
-            }
-            let result = ShellExecuteW(
-                0,
-                operation_wide.as_ptr(),
-                url_wide.as_ptr(),
-                std::ptr::null(),
-                std::ptr::null(),
-                1, // SW_SHOWNORMAL = 1
-            );
-            if result > 32 {
-                Ok(())
-            } else {
-                Err(format!("Error al ejecutar ShellExecuteW: {}", result))
-            }
-        }
-    }
-    #[cfg(not(target_os = "windows"))]
-    {
-        std::process::Command::new("open")
-            .arg(url)
-            .spawn()
-            .map(|_| ())
-            .map_err(|e| e.to_string())
-    }
-}
-
-fn parse_hex_to_bgr(hex: &str) -> Option<u32> {
-    let hex = hex.trim().trim_start_matches('#');
-    if hex.len() != 6 {
-        return None;
-    }
-    let r = u32::from_str_radix(&hex[0..2], 16).ok()?;
-    let g = u32::from_str_radix(&hex[2..4], 16).ok()?;
-    let b = u32::from_str_radix(&hex[4..6], 16).ok()?;
-    Some(r | (g << 8) | (b << 16))
-}
+    general::navegador::abrir(url)
+}// Abre la URL especificada en el navegador nativo del sistema.
 
 #[tauri::command]
 fn cambiar_color_titulo(window: tauri::Window, bg_hex: String, tx_hex: String) -> Result<(), String> {
-    #[cfg(target_os = "windows")]
-    {
-        let hwnd = window.hwnd().map_err(|e| e.to_string())?;
-        let hwnd_isize = hwnd.0 as isize;
-        
-        let bg_color = parse_hex_to_bgr(&bg_hex).unwrap_or(0x00000000);
-        let tx_color = parse_hex_to_bgr(&tx_hex).unwrap_or(0x00FFFFFF);
-
-        unsafe {
-            #[link(name = "dwmapi")]
-            extern "system" {
-                fn DwmSetWindowAttribute(
-                    hwnd: isize,
-                    dw_attribute: u32,
-                    pv_attribute: *const std::ffi::c_void,
-                    cb_attribute: u32,
-                ) -> i32;
-            }
-
-            // DWMWA_CAPTION_COLOR = 35
-            DwmSetWindowAttribute(
-                hwnd_isize,
-                35,
-                &bg_color as *const _ as *const std::ffi::c_void,
-                std::mem::size_of::<u32>() as u32,
-            );
-
-            // DWMWA_TEXT_COLOR = 36
-            DwmSetWindowAttribute(
-                hwnd_isize,
-                36,
-                &tx_color as *const _ as *const std::ffi::c_void,
-                std::mem::size_of::<u32>() as u32,
-            );
-        }
-    }
-    Ok(())
-}
+    general::ventana::cambiar_color(window, bg_hex, tx_hex)
+}// Aplica colores personalizados a la barra de título de la ventana en Windows.
 
 #[tauri::command]
-fn obtener_config(force: Option<bool>) -> Result<config::json::WiiConfig, String> {
+fn obtener_config(force: Option<bool>) -> Result<general::json::WiiConfig, String> {
     if force.unwrap_or(false) {
-        control::actualizar_red::limpiar_cache_config();
+        smile::actualizar_red::limpiar_cache_config();
     }
-    control::actualizar_red::escanear_red_actual()
-}
+    smile::actualizar_red::escanear_red_actual()
+}// Obtiene la configuración de red y equipo local (escaneada en caliente si force es true).
 
 #[tauri::command]
-fn guardar_config(config: config::json::WiiConfig) -> Result<(), String> {
-    // Actualizar el caché en caliente de Rust
-    control::actualizar_red::actualizar_cache_config(config);
+fn guardar_config(config: general::json::WiiConfig) -> Result<(), String> {
+    smile::actualizar_red::actualizar_cache_config(config);
     Ok(())
-}
+}// Guarda los cambios de configuración del equipo local en la caché.
 
 #[tauri::command]
 fn verificar_wol() -> Result<bool, String> {
-    control::encender::wol_activo().map_err(|e| e.to_string())
-}
+    smile::encender::wol_activo().map_err(|e| e.to_string())
+}// Consulta mediante PowerShell si la recepción de Wake-on-LAN está activa.
 
 #[tauri::command]
 fn activar_wol() -> Result<(), String> {
-    control::encender::activar_wol().map_err(|e| e.to_string())
-}
+    smile::encender::activar_wol().map_err(|e| e.to_string())
+}// Habilita la recepción de Wake-on-LAN en el adaptador de red local principal.
 
 #[tauri::command]
-fn configurar_pin(_pin: String) -> Result<(), String> {
-    Ok(())
-}
+fn enviar_wol(mac: String, ip_broadcast: String) -> Result<(), String> {
+    smile::encender::enviar_magic_packet(&mac, &ip_broadcast).map_err(|e| e.to_string())
+}// Envía el paquete mágico Wake-on-LAN a la dirección MAC remota especificada.
 
 #[tauri::command]
-fn verificar_pin_cmd(_pin: String) -> Result<bool, String> {
-    Ok(true)
-}
+fn configurar_pin(pin: String) -> Result<(), String> {
+    general::pin::configurar(pin)
+}// Registra la configuración de PIN de seguridad local (placeholder).
+
+#[tauri::command]
+fn verificar_pin_cmd(pin: String) -> Result<bool, String> {
+    general::pin::verificar(pin)
+}// Valida la verificación de PIN local (placeholder).
 
 #[tauri::command]
 fn suspender_equipo() -> Result<(), String> {
-    control::suspender::suspender().map_err(|e| e.to_string())
-}
+    smile::suspender::suspender().map_err(|e| e.to_string())
+}// Coloca la computadora Windows en estado de suspensión (Sleep) de bajo consumo.
 
 #[tauri::command]
 fn apagar_equipo() -> Result<(), String> {
-    control::apagar::apagar().map_err(|e| e.to_string())
-}
-
-
-
-#[tauri::command]
-fn inyectar_teclado(texto: String) -> Result<(), String> {
-    input::win32::escribir_texto(&texto).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-fn inyectar_click(x: f32, y: f32, boton: String) -> Result<(), String> {
-    input::win32::clic_en(x, y, &boton).map_err(|e| e.to_string())
-}
+    smile::apagar::apagar().map_err(|e| e.to_string())
+}// Envía la orden inmediata de apagado del sistema operativo (shutdown).
 
 #[tauri::command]
 fn lib_genial(cmd: String) -> Result<(), String> {
-    // Aquí llamamos a la función "ejecutar" de control::lab
-    control::lab::genial(&cmd); 
+    lab::lab::genial(&cmd);
     Ok(())
-}
+}// Envía el código de sonido del laboratorio (MessageBeep de Win32) al módulo de audio
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -203,19 +97,16 @@ pub fn run() {
             guardar_config,
             verificar_wol,
             activar_wol,
+            enviar_wol,
             configurar_pin,
             verificar_pin_cmd,
             suspender_equipo,
             apagar_equipo,
-            control::actualizar_red::escanear_red_actual,
-            inyectar_teclado,
-            inyectar_click,
+            smile::actualizar_red::escanear_red_actual,
             abrir_navegador,
             cambiar_color_titulo,
-            lib_genial,
-            lab1::lib_genial_lab1
+            lib_genial
         ])
         .run(tauri::generate_context!())
         .expect("error al iniciar wiidesk");
-}
-
+} // Inicializa y ejecuta el ciclo de vida de la aplicación Tauri con sus plugins y comandos registrados.

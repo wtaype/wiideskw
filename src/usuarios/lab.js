@@ -1,81 +1,30 @@
-import './lab/lab.css';
-import { getls } from '../widev.js';
 import { db } from '../firebase.js';
-import { doc, setDoc } from 'firebase/firestore';
-import { getEstado, suscribir } from '../estados.js';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { getls } from '../widev.js';
 
-const wi = () => getls('wiSmile') || {};
-let unsubEstado = null;
+const getU = () => getls('wiSmile') || {};
 
-// ── RENDER: Muestra los botones y el estado actual de los comandos ──
-export const render = () => {
-  const u = wi();
-  if (!u.email) return '';
-  
-  const actual = getEstado('labComando') || { cmd: '—', index: 0 };
-  
-  return `
-    <div class="lab_wrap">
-      <h2 class="lab_title">Lab — Solo Sonidos</h2>
-      <div class="lab_card">
-        <p class="lab_card_desc">Envía comandos de sonido desde la web o el móvil.</p>
-        <div class="lab_btns">
-          <button class="lab_btn lab_info" data-cmd="hello">Emitir Pitido</button>
-          <button class="lab_btn lab_none" data-cmd="ninguno">Detener/Limpiar</button>
-        </div>
-        <p class="lab_estado">Estado actual: <strong id="lab-cmd-rt">${actual.cmd || '—'}</strong></p>
-      </div>
-    </div>
-  `;
+export const render = () => `
+  <div style="padding: 20px; text-align: center;">
+    <h2>Lab Firestore</h2>
+    <button onclick="window.enviarLab('Hola')">Hola</button>
+    <button onclick="window.enviarLab('Hello')">Hello</button>
+    <p>Activo: <strong id="lab-cmd">—</strong></p>
+  </div>`;
+
+window.enviarLab = c => {
+  const { usuario, userId } = getU();
+  if (usuario && userId) setDoc(doc(db, 'lab', usuario), { texto: c, userId }, { merge: true });
 };
 
-// ── ENVÍO A FIRESTORE: Guarda el comando
-const enviarComando = async (cmd) => {
-  const { uid } = wi();
-  if (!uid) return;
-  
-  console.log(`[Lab] Enviando comando "${cmd}"...`);
-  await setDoc(doc(db, 'lab', uid), { 
-    comando: cmd,
-    userId: uid
-  }, { merge: true });
-};
-
-// ── INICIALIZACIÓN Y LIMPIEZA ──────────────────────────────────
 export const init = () => {
-  cleanup();
-  
-  // Sincronizamos la UI al entrar
-  const actual = getEstado('labComando') || { cmd: '—', index: 0 };
-  const el = document.getElementById('lab-cmd-rt');
-  if (el) {
-    el.textContent = actual.cmd || '—';
-  }
-
-  // Suscribirse al estado reactivo global solo para actualizar la UI
-  unsubEstado = suscribir((estado) => {
-    const labCmd = estado.labComando || { cmd: '—', index: 0 };
-    const elRt = document.getElementById('lab-cmd-rt');
-    if (elRt) {
-      elRt.textContent = labCmd.cmd;
-    }
-  });
-
-  // Escucha clics en los botones de esta pantalla
-  document.addEventListener('click', handleBtnClick);
-};
-
-const handleBtnClick = (e) => {
-  const btn = e.target.closest('.lab_btn');
-  if (btn) {
-    enviarComando(btn.dataset.cmd);
+  const { usuario } = getU();
+  if (usuario) {
+    window.unsubLab = onSnapshot(doc(db, 'lab', usuario), s => {
+      const el = document.getElementById('lab-cmd');
+      if (el) el.textContent = s.data()?.texto || '—';
+    });
   }
 };
 
-export const cleanup = () => {
-  document.removeEventListener('click', handleBtnClick);
-  if (unsubEstado) {
-    unsubEstado();
-    unsubEstado = null;
-  }
-};
+export const cleanup = () => window.unsubLab?.();

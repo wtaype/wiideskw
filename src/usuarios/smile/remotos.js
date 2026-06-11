@@ -1,7 +1,7 @@
 // usuarios/smile/remotos.js — Componente de Equipos Remotos con Seguridad de Auth
 import { getls, Notificacion, wiSpin } from '../../widev.js';
 import { rutas } from '../../rutas.js';
-import { auth, db, rtdb } from '../../firebase.js';
+import { db, rtdb } from '../../firebase.js';
 import { doc, getDoc, setDoc, onSnapshot, collection, query, where } from 'firebase/firestore';
 import { ref, onValue } from 'firebase/database';
 import { invocarTauri } from './utils.js';
@@ -248,7 +248,7 @@ const handleRemotosClick = async (e) => {
         const docRef = doc(db, 'equipos', idEquipoRemoto);
         try {
           const user = obtenerUsuario();
-          const uid = auth.currentUser ? auth.currentUser.uid : (user?.userId || user?.uid);
+          const uid = user?.userId || user?.uid;
           await setDoc(docRef, { comando: 'apagar', userId: uid }, { merge: true });
           Notificacion('Comando de apagado remoto enviado con éxito', 'success');
         } catch (err) {
@@ -262,7 +262,7 @@ const handleRemotosClick = async (e) => {
   }
 };
 
-export const init = async (firebaseUser) => {
+export const init = async (uid, user) => {
   cargandoHosts = true;
   hostsRemotos = [];
   actualizarVistaHosts();
@@ -277,11 +277,8 @@ export const init = async (firebaseUser) => {
     console.warn('[Remotos] Error al obtener config local para filtro:', e);
   }
 
-  if (firebaseUser) {
-    const uidToUse = firebaseUser.uid || getls('wiSmile')?.userId || getls('wiSmile')?.uid;
-    if (uidToUse) {
-      cargarEquiposRemotos(uidToUse, localHostName);
-    }
+  if (uid) {
+    cargarEquiposRemotos(uid, localHostName);
   }
 
   document.addEventListener('click', handleRemotosClick);

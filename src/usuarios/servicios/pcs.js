@@ -11,9 +11,7 @@ const invocarTauri = async (cmd, args = {}) => {
 
 // Generar código aleatorio de 9 dígitos
 const generarCodigo9Digitos = () => {
-  const min = 100000000;
-  const max = 999999999;
-  return Math.floor(Math.random() * (max - min + 1) + min).toString();
+  return Math.floor(100000000 + Math.random() * 900000000).toString();
 };
 
 /**
@@ -23,20 +21,26 @@ export const registrarCodigoConexion = async (userId, idEquipo) => {
   if (!db || !userId || !idEquipo) return null;
 
   try {
-    let config = await invocarTauri('obtener_config');
+    const config = await invocarTauri('obtener_config');
     let idPc = config?.id_pc || '';
 
-    // Si ya existe el código local, validamos que siga registrado en Firestore
+    // 1. Si ya existe el código local, verificar que siga registrado en Firestore con el mismo propietario/equipo
     if (idPc) {
       const pcRef = doc(db, 'pcs', idPc);
       const pcSnap = await getDoc(pcRef);
       if (pcSnap.exists()) {
-        console.log(`[PCS] Código de conexión validado: ${idPc}`);
-        return idPc;
+        const data = pcSnap.data();
+        if (data.userId === userId && data.equipoId === idEquipo) {
+          console.log(`[PCS] Código de conexión existente validado: ${idPc}`);
+          return idPc;
+        }
       }
-      console.log(`[PCS] El código local ${idPc} no existe en base de datos. Se registrará de nuevo.`);
-    } else {
-      // Si no existe, buscamos generar uno nuevo y único
+      console.log(`[PCS] El código local ${idPc} no existe o es inválido para este equipo. Se generará uno nuevo.`);
+      idPc = '';
+    }
+
+    // 2. Si no existe un código válido, buscamos generar uno nuevo y único
+    if (!idPc) {
       let intento = 0;
       while (intento < 10) {
         const codigoCandidato = generarCodigo9Digitos();
@@ -52,19 +56,19 @@ export const registrarCodigoConexion = async (userId, idEquipo) => {
     }
 
     if (!idPc) {
-      throw new Error('No se pudo generar un código único de 9 dígitos tras varios intentos.');
+      throw new Error('No se pudo generar un código único de 9 dígitos tras 10 intentos.');
     }
 
-    // Registrar en la colección 'pcs'
+    // 3. Registrar en la colección 'pcs'
     const pcDocRef = doc(db, 'pcs', idPc);
     await setDoc(pcDocRef, {
-      idPc: idPc,
+      idPc,
       equipoId: idEquipo,
-      userId: userId,
+      userId,
       creado: serverTimestamp(),
     });
 
-    // Guardar en la configuración local de Tauri
+    // 4. Guardar en la configuración local de Tauri
     config.id_pc = idPc;
     await invocarTauri('guardar_config', { config });
     console.log(`[PCS] Código de conexión registrado con éxito: ${idPc}`);
@@ -74,3 +78,4 @@ export const registrarCodigoConexion = async (userId, idEquipo) => {
     return null;
   }
 };
+

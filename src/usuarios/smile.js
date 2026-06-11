@@ -3,8 +3,6 @@ import './smile.css';
 import { getls } from '../widev.js';
 import { app } from '../wii.js';
 import { rutas } from '../rutas.js';
-import { auth } from '../firebase.js';
-import { onAuthStateChanged } from 'firebase/auth';
 import * as hero from './smile/hero.js';
 import * as local from './smile/local.js';
 import * as remotos from './smile/remotos.js';
@@ -45,19 +43,11 @@ export const init = async () => {
   const user = obtenerUsuario();
   if (!user) return setTimeout(() => rutas.navigate('/login'), 100);
 
-  // Esperar resolución de Firebase Auth (máx. 1.5s)
-  const firebaseUser = await new Promise((resolve) => {
-    if (auth.currentUser) return resolve(auth.currentUser);
-    const unsub = onAuthStateChanged(auth, (u) => {
-      unsub();
-      resolve(u);
-    });
-    setTimeout(resolve, 1500);
-  });
+  const uid = user.userId || user.uid;
 
   // Inicializar componentes secundarios
-  await local.init(firebaseUser);
-  await remotos.init(firebaseUser);
+  await local.init(uid, user);
+  await remotos.init(uid, user);
 
   console.log(`🏜️ Centro de Control Modular de ${app} cargado.`);
   window.__WIREADY__ = true;

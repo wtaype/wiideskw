@@ -1,6 +1,6 @@
 // usuarios/smile/local.js — Componente del Host Local con Registro Manual y Seguridad de Auth
 import { getls, Notificacion, wiSpin } from '../../widev.js';
-import { auth, db } from '../../firebase.js';
+import { db } from '../../firebase.js';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import QRCode from 'qrcode';
 import { registrarCodigoConexion } from '../servicios/pcs.js';
@@ -42,8 +42,7 @@ const handleRegistrarLocal = async (e) => {
       localConfig = freshConfig;
     }
 
-    const firebaseUser = auth.currentUser;
-    const uid = firebaseUser ? firebaseUser.uid : (user.userId || user.uid || '');
+    const uid = user.userId || user.uid || '';
 
     const usuarioSanitizado = (user.usuario || 'user').trim().toLowerCase().replace(/[@.]/g, '_');
     const idEquipo = `${usuarioSanitizado}_${localConfig.dispositivo_nombre.toLowerCase()}`;
@@ -87,8 +86,7 @@ const generarQRConexion = async () => {
 
   try {
     const user = getls('wiSmile') || {};
-    const firebaseUser = auth.currentUser;
-    const uid = firebaseUser ? firebaseUser.uid : (user.userId || user.uid || '');
+    const uid = user.userId || user.uid || '';
     const usuarioSanitizado = (user.usuario || 'user').trim().toLowerCase().replace(/[@.]/g, '_');
     const idEquipo = `${usuarioSanitizado}_${localConfig.dispositivo_nombre.toLowerCase()}`;
     
@@ -205,7 +203,7 @@ export const render = () => {
   `;
 };
 
-export const init = async (firebaseUser) => {
+export const init = async (uid, user) => {
   cargandoLocal = true;
   localConfig = null;
   estaRegistrado = false;
@@ -217,7 +215,7 @@ export const init = async (firebaseUser) => {
     console.error('[Local] Error al invocar config en Tauri:', err);
   }
 
-  if (localConfig && firebaseUser) {
+  if (localConfig && uid) {
     try {
       if (localConfig.id_pc) {
         const pcSnap = await getDoc(doc(db, 'pcs', localConfig.id_pc));

@@ -1,11 +1,11 @@
 // actualizar_red.rs — Escaneo dinámico y generación de configuraciones de red en caliente
 use std::process::Command;
 use std::sync::Mutex;
-use crate::config;
+use crate::general::json;
 
-static CONFIG_CACHE: Mutex<Option<config::json::WiiConfig>> = Mutex::new(None);
+static CONFIG_CACHE: Mutex<Option<json::WiiConfig>> = Mutex::new(None);
 
-pub fn actualizar_cache_config(nueva_config: config::json::WiiConfig) {
+pub fn actualizar_cache_config(nueva_config: json::WiiConfig) {
     if let Ok(mut cache) = CONFIG_CACHE.lock() {
         *cache = Some(nueva_config);
     }
@@ -16,7 +16,6 @@ pub fn limpiar_cache_config() {
         *cache = None;
     }
 }
-
 
 /// Genera un código de conexión determinista de 9 dígitos que comienza por '10' a partir de la dirección MAC.
 pub fn generar_id_pc_reproducible(mac: &str) -> String {
@@ -76,7 +75,7 @@ pub fn detectar_red_activa() -> Result<(String, String, String), Box<dyn std::er
 
 /// Comando Tauri para escanear y generar la configuración de red en caliente de forma dinámica
 #[tauri::command]
-pub fn escanear_red_actual() -> Result<config::json::WiiConfig, String> {
+pub fn escanear_red_actual() -> Result<json::WiiConfig, String> {
     // Intentar leer de la caché primero para optimizar RAM/CPU
     {
         if let Ok(cache) = CONFIG_CACHE.lock() {
@@ -94,14 +93,14 @@ pub fn escanear_red_actual() -> Result<config::json::WiiConfig, String> {
         
     let id_pc = generar_id_pc_reproducible(&mac);
 
-    let config = config::json::WiiConfig {
+    let config = json::WiiConfig {
         dispositivo_nombre: nombre_pc,
         ip_local: ip,
         mac_address: mac,
         ip_broadcast: broadcast,
         dominio_remoto: "https://wiidesk.web.app".to_string(),
         id_pc,
-        seguridad: config::json::SeguridadConfig {
+        seguridad: json::SeguridadConfig {
             requerir_pin: true,
             pin_hash: "".to_string(),
             pin_salt: "".to_string(),
