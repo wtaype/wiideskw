@@ -1,7 +1,7 @@
 import { getls, wiSmart } from './widev.js';
 import { rutas } from './rutas.js';
 import './todos/loginpc.js';
-import './estados.js';
+import './usuarios/estados/estados.js';
 import './usuarios/servicios/servicios.js';
 
 

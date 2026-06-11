@@ -68,7 +68,7 @@ window.addEventListener('winavigate', ({ detail: { norm } }) => renderHeader(wiA
 
 // ── FIREBASE AUTH STATE — detecta pérdida de sesión en tiempo real (multi-pestaña) ──────────────
 const _salir = () => !window.isRel && (window.isRel = 1) &&
-  import('./estados.js').then(m => m.salir(['wiTema', 'wiSmart']).then(() => location.reload()));
+  import('./usuarios/estados/estados.js').then(m => m.salir(['wiTema', 'wiSmart']).then(() => location.reload()));
 
 onAuthStateChanged(auth, u => !u && wiAuth.user && _salir());
 
@@ -77,7 +77,7 @@ window.addEventListener('storage', e => (!e.key || e.key === 'wiSmile') && locat
 // ── EVENTOS GLOBALES ──────────────────────────────────────────────────────────
 document.addEventListener('click', async (e) => {
   if (e.target.closest('.bt_salir')) {
-    const { salir } = await import('./estados.js');
+    const { salir } = await import('./usuarios/estados/estados.js');
     salir(['wiTema', 'wiSmart']);
   }
 });

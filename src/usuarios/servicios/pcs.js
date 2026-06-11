@@ -24,22 +24,24 @@ export const registrarCodigoConexion = async (userId, idEquipo) => {
     const config = await invocarTauri('obtener_config');
     let idPc = config?.id_pc || '';
 
-    // 1. Si ya existe el código local, verificar que siga registrado en Firestore con el mismo propietario/equipo
+    // 1. Si ya existe el código local, verificar disponibilidad en Firestore
     if (idPc) {
       const pcRef = doc(db, 'pcs', idPc);
       const pcSnap = await getDoc(pcRef);
       if (pcSnap.exists()) {
         const data = pcSnap.data();
-        if (data.userId === userId && data.equipoId === idEquipo) {
-          console.log(`[PCS] Código de conexión existente validado: ${idPc}`);
-          return idPc;
+        if (data.userId !== userId) {
+          console.log(`[PCS] Colisión: el código local ${idPc} pertenece a otro usuario. Se generará uno nuevo.`);
+          idPc = '';
+        } else {
+          console.log(`[PCS] Código de conexión existente validado para este usuario: ${idPc}`);
         }
+      } else {
+        console.log(`[PCS] El código determinista ${idPc} está libre en la nube. Se procederá a registrar.`);
       }
-      console.log(`[PCS] El código local ${idPc} no existe o es inválido para este equipo. Se generará uno nuevo.`);
-      idPc = '';
     }
 
-    // 2. Si no existe un código válido, buscamos generar uno nuevo y único
+    // 2. Si no existe un código válido (o hubo colisión), generamos uno nuevo aleatorio y único
     if (!idPc) {
       let intento = 0;
       while (intento < 10) {
@@ -66,7 +68,7 @@ export const registrarCodigoConexion = async (userId, idEquipo) => {
       equipoId: idEquipo,
       userId,
       creado: serverTimestamp(),
-    });
+    }, { merge: true });
 
     // 4. Guardar en la configuración local de Tauri
     config.id_pc = idPc;

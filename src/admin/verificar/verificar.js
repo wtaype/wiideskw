@@ -141,7 +141,7 @@ function _iniciarTimer() {
       localStorage.removeItem('vault_expire');
       Mensaje('Sesión cerrada por inactividad', 'error');
       
-      const { salir } = await import('../../estados.js');
+      const { salir } = await import('../../usuarios/estados/estados.js');
       await salir();
     }
   };

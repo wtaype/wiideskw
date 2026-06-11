@@ -2,7 +2,7 @@ import './pc2pc.css';
 import { getls, savels, Notificacion, wiSpin, wicopy } from '../widev.js';
 import { app } from '../wii.js';
 import { rutas } from '../rutas.js';
-import { getEstado, setEstado, suscribir } from '../estados.js';
+import { getEstado, setEstado, suscribir } from './estados/estados.js';
 import { db } from '../firebase.js';
 
 // ── Estado Local ──────────────────────────────────────────────

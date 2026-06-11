@@ -35,6 +35,23 @@ pub fn generar_id_pc_reproducible(mac: &str) -> String {
     format!("10{:07}", modulo)
 }
 
+/// Obtiene el UUID de la placa base (BIOS) de Windows de forma silenciosa.
+pub fn obtener_uuid_bios() -> Result<String, Box<dyn std::error::Error>> {
+    let mut cmd = Command::new("powershell");
+    cmd.args(["-Command", "(Get-CimInstance Win32_ComputerSystemProduct).Uuid"]);
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+    let output = cmd.output()?;
+    let uuid = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if uuid.is_empty() {
+        return Err("El UUID obtenido está vacío".into());
+    }
+    Ok(uuid)
+}
+
 /// Detecta silenciosamente los datos de red (IP, MAC y Broadcast) usando llamadas nativas .NET en PowerShell
 pub fn detectar_red_activa() -> Result<(String, String, String), Box<dyn std::error::Error>> {
     let mut cmd = Command::new("powershell");
@@ -58,7 +75,7 @@ pub fn detectar_red_activa() -> Result<(String, String, String), Box<dyn std::er
               } \
           }; \
           if (-not $encontrado) { throw 'No se encontró ninguna interfaz de red activa con salida a internet' }"
-    ]);
+     ]);
     #[cfg(target_os = "windows")]
     {
         use std::os::windows::process::CommandExt;
@@ -91,7 +108,8 @@ pub fn escanear_red_actual() -> Result<json::WiiConfig, String> {
     let nombre_pc = std::env::var("COMPUTERNAME")
         .unwrap_or_else(|_| "Host-Wiidesk".to_string());
         
-    let id_pc = generar_id_pc_reproducible(&mac);
+    let uuid_or_mac = obtener_uuid_bios().unwrap_or_else(|_| mac.clone());
+    let id_pc = generar_id_pc_reproducible(&uuid_or_mac);
 
     let config = json::WiiConfig {
         dispositivo_nombre: nombre_pc,
