@@ -8,10 +8,10 @@ import { linkweb } from '../wii.js';
 // --- DATA ACCESS HELPERS ---
 const wiUser = () => getls('wiSmile') || null;
 
-const loadUserLikes = async (email) => {
-  if (!email) return [];
+const loadUserLikes = async (uid) => {
+  if (!uid) return [];
   try {
-    const snap = await getDocs(query(collection(db, 'wimusicaLikes'), where('email', '==', email.trim())));
+    const snap = await getDocs(query(collection(db, 'wimusicaLikes'), where('userId', '==', uid)));
     if (snap.empty) return [];
     return snap.docs.map(d => d.data().trackId);
   } catch (e) {
@@ -923,7 +923,7 @@ export const init = async () => {
   cleanup(); // Reset state
 
   // Load user likes
-  likes = await loadUserLikes(user.email);
+  likes = await loadUserLikes(user.uid);
 
   // Setup Audio element
   audio = new Audio();

@@ -461,3 +461,24 @@
 .wd_skeleton_card:nth-child(3) {
   animation-delay: 0.4s;
 }
+
+/* Input editable para el Hostname local */
+.wd_host_input {
+  background: var(--inp);
+  border: 1px solid var(--brd);
+  color: var(--tx1);
+  font-family: var(--ff_P);
+  font-size: var(--fz_s3);
+  font-weight: 700;
+  padding: 0.4vh 1vh;
+  border-radius: 0.6vh;
+  text-align: right;
+  width: 55%;
+  max-width: 250px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+.wd_host_input:focus {
+  border-color: var(--mco);
+  box-shadow: 0 0 1vh color-mix(in srgb, var(--mco) 20%, transparent);
+}

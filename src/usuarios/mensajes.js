@@ -80,6 +80,7 @@ export const init = () => {
   const u = wi();
   if (!u.email) return rutas.navigate('/');
   const userEmail = u.email || auth.currentUser?.email;
+  const userUid = u.uid;
 
   onDoc('input', '#wmNuevo', function () {
     const countEl = document.getElementById('wmCount');
@@ -93,11 +94,11 @@ export const init = () => {
   onDoc('keydown', '#wmNuevo', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      _enviar(userEmail);
+      _enviar(userEmail, userUid);
     }
   });
 
-  onDoc('click', '#wmEnviar', () => _enviar(userEmail));
+  onDoc('click', '#wmEnviar', () => _enviar(userEmail, userUid));
 
   onDoc('click', '.wm_item', function (e) {
     if (e.target.closest('.wm_del')) return;
@@ -127,19 +128,19 @@ export const init = () => {
   onDoc('click', '#wmConfirm', _eliminar);
 
   // Mostrar cache inmediato, luego sync en background
-  _cargar(userEmail, true);
+  _cargar(userUid, true);
 
   // Auto-refresh cada 30s solo si tab visible
-  refreshTimer = setInterval(() => !document.hidden && _cargar(userEmail, true), 30000);
-  _onVis = () => { !document.hidden && _cargar(userEmail, true); };
+  refreshTimer = setInterval(() => !document.hidden && _cargar(userUid, true), 30000);
+  _onVis = () => { !document.hidden && _cargar(userUid, true); };
   document.addEventListener('visibilitychange', _onVis);
   _scroll();
 };
 
 // ── Cargar (getDocs = 1 read batch, no listener permanente) ──
-const _cargar = async (email, silent = false) => {
+const _cargar = async (uid, silent = false) => {
   try {
-    const q = query(collection(db, 'wiMensajes'), where('email', '==', email), limit(LIMIT));
+    const q = query(collection(db, 'wiMensajes'), where('userId', '==', uid), limit(LIMIT));
     const snap = await getDocs(q);
     msgs = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha?.seconds || 0) - (b.fecha?.seconds || 0));
     _save(msgs);
@@ -165,7 +166,7 @@ const _cargar = async (email, silent = false) => {
 };
 
 // ── Enviar (optimistic UI: aparece al instante, Firestore en background) ──
-const _enviar = (email) => {
+const _enviar = (email, uid) => {
   if (enviando) return;
   const ta = document.getElementById('wmNuevo');
   if (!ta) return;
@@ -176,7 +177,7 @@ const _enviar = (email) => {
   const id = `m${Date.now()}`;
 
   // UI instantánea
-  const fake = { id, mensaje: nota, email, usuario: nombre || usuario || email, fecha: { seconds: Date.now() / 1000 } };
+  const fake = { id, mensaje: nota, email, usuario: nombre || usuario || email, userId: uid, fecha: { seconds: Date.now() / 1000 } };
   msgs.push(fake);
   _save(msgs);
   const chatEl = document.getElementById('wmChat');
@@ -191,7 +192,7 @@ const _enviar = (email) => {
   if (enviarEl) enviarEl.disabled = true;
 
   // Background write
-  setDoc(doc(db, 'wiMensajes', id), { id, mensaje: nota, email, usuario: nombre || usuario || email, fecha: serverTimestamp() })
+  setDoc(doc(db, 'wiMensajes', id), { id, mensaje: nota, email, usuario: nombre || usuario || email, userId: uid, fecha: serverTimestamp() })
     .then(() => { _status(true); })
     .catch(e => {
       console.error('❌', e);

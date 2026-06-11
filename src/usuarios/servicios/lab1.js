@@ -1,9 +1,9 @@
 // servicios/lab1.js — Servicio de fondo: Lab 1 Realtime Database
 // Escucha comandos de sonido en tiempo real desde RTDB y llama a Rust (MessageBeep).
-import { auth, rtdb } from '../firebase.js';
+import { auth, rtdb } from '../../firebase.js';
 import { ref, onValue, set } from 'firebase/database';
 import { onAuthStateChanged } from 'firebase/auth';
-import { wiAuth } from '../widev.js';
+import { wiAuth } from '../../widev.js';
 
 let _unsubLab1 = null;
 

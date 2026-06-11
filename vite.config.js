@@ -4,8 +4,7 @@ export default defineConfig({
   base: process.env.VITE_BASE || '/',
   server: {
     port: 1420,
-    strictPort: true,
-    watch: { usePolling: true }
+    strictPort: true
   },
   build: {
     outDir: 'dist',

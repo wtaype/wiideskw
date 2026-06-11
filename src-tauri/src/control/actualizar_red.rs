@@ -1,7 +1,40 @@
-// actualizar_red.rs — Escaneo dinámico y actualización de interfaces de red
-
+// actualizar_red.rs — Escaneo dinámico y generación de configuraciones de red en caliente
 use std::process::Command;
+use std::sync::Mutex;
 use crate::config;
+
+static CONFIG_CACHE: Mutex<Option<config::json::WiiConfig>> = Mutex::new(None);
+
+pub fn actualizar_cache_config(nueva_config: config::json::WiiConfig) {
+    if let Ok(mut cache) = CONFIG_CACHE.lock() {
+        *cache = Some(nueva_config);
+    }
+}
+
+pub fn limpiar_cache_config() {
+    if let Ok(mut cache) = CONFIG_CACHE.lock() {
+        *cache = None;
+    }
+}
+
+
+/// Genera un código de conexión determinista de 9 dígitos que comienza por '10' a partir de la dirección MAC.
+pub fn generar_id_pc_reproducible(mac: &str) -> String {
+    let limpia: String = mac.chars().filter(|c| c.is_alphanumeric()).collect();
+    if limpia.is_empty() {
+        return "100000000".to_string();
+    }
+    
+    // Algoritmo de hash determinista reproducible
+    let mut hash: u32 = 0;
+    for c in limpia.chars() {
+        hash = hash.wrapping_mul(31).wrapping_add(c as u32);
+    }
+    
+    // Tomamos modulo 10,000,000 para obtener exactamente 7 dígitos
+    let modulo = hash % 10_000_000;
+    format!("10{:07}", modulo)
+}
 
 /// Detecta silenciosamente los datos de red (IP, MAC y Broadcast) usando llamadas nativas .NET en PowerShell
 pub fn detectar_red_activa() -> Result<(String, String, String), Box<dyn std::error::Error>> {
@@ -23,9 +56,9 @@ pub fn detectar_red_activa() -> Result<(String, String, String), Box<dyn std::er
                      $encontrado = $true; \
                      break; \
                  } \
-             } \
-         }; \
-         if (-not $encontrado) { throw 'No se encontró ninguna interfaz de red activa con salida a internet' }"
+              } \
+          }; \
+          if (-not $encontrado) { throw 'No se encontró ninguna interfaz de red activa con salida a internet' }"
     ]);
     #[cfg(target_os = "windows")]
     {
@@ -41,14 +74,46 @@ pub fn detectar_red_activa() -> Result<(String, String, String), Box<dyn std::er
     Ok((partes[0].to_string(), partes[1].to_string(), partes[2].to_string()))
 }
 
-/// Comando Tauri para escanear y actualizar la configuración local con los datos de red reales
+/// Comando Tauri para escanear y generar la configuración de red en caliente de forma dinámica
 #[tauri::command]
 pub fn escanear_red_actual() -> Result<config::json::WiiConfig, String> {
+    // Intentar leer de la caché primero para optimizar RAM/CPU
+    {
+        if let Ok(cache) = CONFIG_CACHE.lock() {
+            if let Some(ref config) = *cache {
+                return Ok(config.clone());
+            }
+        }
+    }
+
     let (ip, mac, broadcast) = detectar_red_activa().map_err(|e| e.to_string())?;
-    let mut cfg = config::json::cargar_configuracion().map_err(|e| e.to_string())?;
-    cfg.ip_local = ip;
-    cfg.mac_address = mac;
-    cfg.ip_broadcast = broadcast;
-    config::json::guardar_configuracion(&cfg).map_err(|e| e.to_string())?;
-    Ok(cfg)
+    
+    // Obtener el nombre del Host nativo de Windows (COMPUTERNAME)
+    let nombre_pc = std::env::var("COMPUTERNAME")
+        .unwrap_or_else(|_| "Host-Wiidesk".to_string());
+        
+    let id_pc = generar_id_pc_reproducible(&mac);
+
+    let config = config::json::WiiConfig {
+        dispositivo_nombre: nombre_pc,
+        ip_local: ip,
+        mac_address: mac,
+        ip_broadcast: broadcast,
+        dominio_remoto: "https://wiidesk.web.app".to_string(),
+        id_pc,
+        seguridad: config::json::SeguridadConfig {
+            requerir_pin: true,
+            pin_hash: "".to_string(),
+            pin_salt: "".to_string(),
+        },
+    };
+
+    // Almacenar en la caché
+    {
+        if let Ok(mut cache) = CONFIG_CACHE.lock() {
+            *cache = Some(config.clone());
+        }
+    }
+
+    Ok(config)
 }

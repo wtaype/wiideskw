@@ -26,7 +26,6 @@ export const NAV = {
       { href: '/pc2movil',  ico: 'fa-mobile-alt',       txt: 'PC a Móvil' },
       { href: '/pc2web',    ico: 'fa-globe',            txt: 'PC a Web' },
       { href: '/movil2pc',  ico: 'fa-mobile-alt',       txt: 'Móvil a PC' },
-      { href: '/lab',  ico: 'fa-heart',       txt: 'Lab' },
       { href: '/lab1',  ico: 'fa-microscope',       txt: 'Lab 1 RTDB' },
       ...COMUN,
     ],
@@ -74,7 +73,6 @@ export const RUTAS = [
   { path: '/privacidad', area: 'todos/acerca/' },
   { path: '/feedback',   area: 'todos/acerca/' },
   { path: '/contacto',   area: 'todos/acerca/' },
-  { path: '/lab',    area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
   { path: '/lab1',   area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
   { path: '/smile',    area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
   { path: '/notas',    area: 'usuarios/', roles: ['usuario','editor','gestor','admin'] },
@@ -145,9 +143,15 @@ class WiRutas {
     const norm = wiPath.limpiar(ruta) === '/' ? `/${this.HOME}` : wiPath.limpiar(ruta);
     if (this.cache[norm] || !this.rutas[norm]) return;
     try {
-      this.cache[norm] = await this.rutas[norm]();
+      // Guardar la promesa inmediatamente para evitar importaciones duplicadas concurrentes
+      this.cache[norm] = this.rutas[norm]();
+      const mod = await this.cache[norm];
+      this.cache[norm] = mod; // Guardar el módulo ya resuelto
       console.log(`⚡ Listo ${norm.replace('/', '')}`);
-    } catch { console.warn('[ruta] prefetch falló:', norm); }
+    } catch (err) {
+      delete this.cache[norm]; // Limpiar la caché si falla para permitir reintentos
+      console.warn('[ruta] prefetch falló:', norm, err);
+    }
   }
 
   async navigate(ruta, historial = true) {

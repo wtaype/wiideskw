@@ -8,10 +8,7 @@ import { wiAuth } from './widev.js';
 
 // Mapeo de colecciones a escuchar. Para agregar una nueva, añade un objeto al array:
 // Ejemplo: { coleccion: 'accesos', estadoKey: 'accesoComputadora' }
-const CONFIG_LISTENERS = [
-  { coleccion: 'lab',     estadoKey: 'labComando' },
-  { coleccion: 'control', estadoKey: 'controlPC'  }
-];
+const CONFIG_LISTENERS = [];
 
 const _estado = {};
 CONFIG_LISTENERS.forEach(cfg => {
@@ -26,17 +23,6 @@ const actualizadorGeneral = (estadoKey, data, isInitial) => {
       const cmd = data.comando;
       if (cmd && cmd !== 'ninguno' && cmd !== '—') {
         reproducirSonido(cmd);
-      }
-      break;
-    }
-    case 'controlPC': {
-      const cmd    = data.comando;
-      const estado = data.estado;
-      if (cmd && cmd !== 'ninguno' && cmd !== '—') {
-        console.log(`[Estados] Control PC — comando pendiente: ${cmd}`);
-      }
-      if (estado && estado !== 'ninguno' && estado !== '—') {
-        console.log(`[Estados] Control PC — estado actual: ${estado}`);
       }
       break;
     }
@@ -109,6 +95,8 @@ wiAuth.on((user) => {
 
         actualizadorGeneral(estadoKey, data, isInitial);
         isInitial = false;
+      }, (err) => {
+        console.error(`[Estados] Error en snapshot listener para la colección ${coleccion}:`, err);
       });
       unsubs.push(unsub);
     });

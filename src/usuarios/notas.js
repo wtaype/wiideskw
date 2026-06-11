@@ -114,9 +114,10 @@ export const init = () => {
   const u = wi();
   if (!u.email) return rutas.navigate('/');
   const userEmail = u.email || auth.currentUser?.email;
+  const userUid = u.uid;
 
-  onDoc('click', '#wnNueva', () => _crearNota(userEmail));
-  onDoc('click', '#wnSync', () => _syncNotas(userEmail));
+  onDoc('click', '#wnNueva', () => _crearNota(userEmail, userUid));
+  onDoc('click', '#wnSync', () => _syncNotas(userUid));
 
   onDoc('click', '.wn_card', function(e) {
     if (e.target.closest('.wn_toolbar, .wn_colors')) return;
@@ -127,7 +128,7 @@ export const init = () => {
   onDoc('input', '.wn_titulo, .wn_contenido', function() {
     const card = this.closest('.wn_card');
     if (card) {
-      _debounceGuardar(card.getAttribute('data-id'), userEmail);
+      _debounceGuardar(card.getAttribute('data-id'), userEmail, userUid);
     }
   });
 
@@ -135,7 +136,7 @@ export const init = () => {
     e.stopPropagation();
     const card = this.closest('.wn_card');
     if (card) {
-      _togglePin(card.getAttribute('data-id'), userEmail);
+      _togglePin(card.getAttribute('data-id'), userEmail, userUid);
     }
   });
 
@@ -152,7 +153,7 @@ export const init = () => {
     e.stopPropagation();
     const card = this.closest('.wn_card');
     if (card) {
-      _cambiarColor(card.getAttribute('data-id'), this.getAttribute('data-color'), userEmail);
+      _cambiarColor(card.getAttribute('data-id'), this.getAttribute('data-color'), userEmail, userUid);
       const colorsEl = card.querySelector('.wn_colors');
       if (colorsEl) colorsEl.classList.remove('show');
     }
@@ -185,17 +186,17 @@ export const init = () => {
   });
 
   // Smart load: usar cache si es válido, sino cargar de Firestore
-  _smartLoad(userEmail);
+  _smartLoad(userUid);
 
   // Solo recargar cuando tab se vuelve visible y cache expiró
   _onVis = () => { 
-    if (!document.hidden && !_isCacheValid()) _cargarDesdeFirestore(userEmail, true); 
+    if (!document.hidden && !_isCacheValid()) _cargarDesdeFirestore(userUid, true); 
   };
   document.addEventListener('visibilitychange', _onVis);
 };
 
 // ── Smart Load ───────────────────────────────────────────────
-const _smartLoad = (email) => {
+const _smartLoad = (uid) => {
   const cache = _getCache();
   if (cache.length && _isCacheValid()) {
     notas = cache;
@@ -204,25 +205,25 @@ const _smartLoad = (email) => {
     if (grid) grid.innerHTML = _htmlGrid(notas);
     _status(true, 'Cache');
   } else {
-    _cargarDesdeFirestore(email, false);
+    _cargarDesdeFirestore(uid, false);
   }
 };
 
 // ── Sync Manual ──────────────────────────────────────────────
-const _syncNotas = async (email) => {
+const _syncNotas = async (uid) => {
   const syncBtn = document.getElementById('wnSync');
   if (syncBtn) syncBtn.classList.add('spinning');
   _clearCache();
-  await _cargarDesdeFirestore(email, false);
+  await _cargarDesdeFirestore(uid, false);
   if (syncBtn) syncBtn.classList.remove('spinning');
   Notificacion('Sincronizado ✓', 'success', 1500);
 };
 
 // ── Cargar desde Firestore ───────────────────────────────────
-const _cargarDesdeFirestore = async (email, silent = false) => {
+const _cargarDesdeFirestore = async (uid, silent = false) => {
   try {
     _status(false, 'Cargando...');
-    const q = query(collection(db, 'wiNotas'), where('email', '==', email), limit(LIMIT));
+    const q = query(collection(db, 'wiNotas'), where('userId', '==', uid), limit(LIMIT));
     const snap = await getDocs(q);
     notas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     _sortNotas();
@@ -256,13 +257,13 @@ const _sortNotas = () => {
 };
 
 // ── Crear nota ───────────────────────────────────────────────
-const _crearNota = async (email) => {
+const _crearNota = async (email, uid) => {
   const id = `nota_${Date.now()}`;
   const { usuario = '', nombre = '' } = wi();
 
   const nueva = {
     id, titulo: '', contenido: '', color: 'Cielo', pin: false,
-    email, usuario: nombre || usuario || email,
+    email, usuario: nombre || usuario || email, userId: uid,
     fecha: { seconds: Date.now() / 1000 }
   };
 
@@ -309,13 +310,13 @@ const _toggleEditar = (id) => {
 };
 
 // ── Debounce guardar ─────────────────────────────────────────
-const _debounceGuardar = (id, email) => {
+const _debounceGuardar = (id, email, uid) => {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => _guardarNota(id, email), DEBOUNCE);
+  saveTimer = setTimeout(() => _guardarNota(id, email, uid), DEBOUNCE);
 };
 
 // ── Guardar nota ─────────────────────────────────────────────
-const _guardarNota = async (id, email) => {
+const _guardarNota = async (id, email, uid) => {
   const card = document.querySelector(`.wn_card[data-id="${id}"]`);
   if (!card) return;
   const titleEl = card.querySelector('.wn_titulo');
@@ -337,7 +338,7 @@ const _guardarNota = async (id, email) => {
   try {
     await setDoc(doc(db, 'wiNotas', id), {
       id, titulo, contenido, color: nota.color, pin: nota.pin,
-      email, usuario: nota.usuario, fecha: serverTimestamp()
+      email, usuario: nota.usuario, userId: uid, fecha: serverTimestamp()
     });
     _status(true);
     card.classList.remove('saving');
@@ -351,7 +352,7 @@ const _guardarNota = async (id, email) => {
 };
 
 // ── Toggle pin ───────────────────────────────────────────────
-const _togglePin = async (id, email) => {
+const _togglePin = async (id, email, uid) => {
   const nota = notas.find(n => n.id === id);
   if (!nota) return;
 
@@ -362,7 +363,7 @@ const _togglePin = async (id, email) => {
   if (grid) grid.innerHTML = _htmlGrid(notas);
 
   try {
-    await setDoc(doc(db, 'wiNotas', id), { ...nota, fecha: serverTimestamp() });
+    await setDoc(doc(db, 'wiNotas', id), { ...nota, userId: uid, fecha: serverTimestamp() });
     _status(true);
     Notificacion(nota.pin ? 'Fijada 📌' : 'Desanclada', 'success', 1000);
   } catch (e) {
@@ -376,7 +377,7 @@ const _togglePin = async (id, email) => {
 };
 
 // ── Cambiar color ────────────────────────────────────────────
-const _cambiarColor = async (id, colorId, email) => {
+const _cambiarColor = async (id, colorId, email, uid) => {
   const nota = notas.find(n => n.id === id);
   if (!nota || nota.color === colorId) return;
 
@@ -387,7 +388,7 @@ const _cambiarColor = async (id, colorId, email) => {
   if (grid) grid.innerHTML = _htmlGrid(notas);
 
   try {
-    await setDoc(doc(db, 'wiNotas', id), { ...nota, fecha: serverTimestamp() });
+    await setDoc(doc(db, 'wiNotas', id), { ...nota, userId: uid, fecha: serverTimestamp() });
     _status(true);
   } catch (e) {
     console.error('❌', e);

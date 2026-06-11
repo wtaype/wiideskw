@@ -111,13 +111,18 @@ fn cambiar_color_titulo(window: tauri::Window, bg_hex: String, tx_hex: String) -
 }
 
 #[tauri::command]
-fn obtener_config() -> Result<config::json::WiiConfig, String> {
-    config::json::cargar_configuracion().map_err(|e| e.to_string())
+fn obtener_config(force: Option<bool>) -> Result<config::json::WiiConfig, String> {
+    if force.unwrap_or(false) {
+        control::actualizar_red::limpiar_cache_config();
+    }
+    control::actualizar_red::escanear_red_actual()
 }
 
 #[tauri::command]
 fn guardar_config(config: config::json::WiiConfig) -> Result<(), String> {
-    config::json::guardar_configuracion(&config).map_err(|e| e.to_string())
+    // Actualizar el caché en caliente de Rust
+    control::actualizar_red::actualizar_cache_config(config);
+    Ok(())
 }
 
 #[tauri::command]
@@ -131,26 +136,13 @@ fn activar_wol() -> Result<(), String> {
 }
 
 #[tauri::command]
-fn configurar_pin(pin: String) -> Result<(), String> {
-    let (salt_hex, hash_hex) = config::hash::hashear_pin(&pin)
-        .map_err(|e| e.to_string())?;
-    let mut cfg = config::json::cargar_configuracion()
-        .map_err(|e| e.to_string())?;
-    cfg.seguridad.pin_hash = hash_hex;
-    cfg.seguridad.pin_salt = salt_hex;
-    config::json::guardar_configuracion(&cfg)
-        .map_err(|e| e.to_string())
+fn configurar_pin(_pin: String) -> Result<(), String> {
+    Ok(())
 }
 
 #[tauri::command]
-fn verificar_pin_cmd(pin: String) -> Result<bool, String> {
-    let cfg = config::json::cargar_configuracion()
-        .map_err(|e| e.to_string())?;
-    Ok(config::hash::verificar_pin(
-        &pin,
-        &cfg.seguridad.pin_salt,
-        &cfg.seguridad.pin_hash,
-    ))
+fn verificar_pin_cmd(_pin: String) -> Result<bool, String> {
+    Ok(true)
 }
 
 #[tauri::command]

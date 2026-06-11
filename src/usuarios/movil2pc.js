@@ -177,7 +177,8 @@ const generarPinQR = async () => {
     actualizarBadgesEstado();
     agregarLog(`Nuevo código de señalización generado: <strong>${codigoM2P}</strong>`, 'system');
 
-    // Registrar en Firestore si está disponible
+    // Registro en Firestore desactivado para evitar consumo excesivo en la colección sesiones_m2p
+    /*
     if (db) {
       const docRef = doc(db, 'sesiones_m2p', codigoM2P);
       await setDoc(docRef, {
@@ -197,6 +198,7 @@ const generarPinQR = async () => {
         }
       });
     }
+    */
 
     // Dibujar QR
     setTimeout(() => {

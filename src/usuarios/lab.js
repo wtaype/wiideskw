@@ -1,4 +1,4 @@
-import './lab.css';
+import './lab/lab.css';
 import { getls } from '../widev.js';
 import { db } from '../firebase.js';
 import { doc, setDoc } from 'firebase/firestore';
@@ -36,7 +36,8 @@ const enviarComando = async (cmd) => {
   
   console.log(`[Lab] Enviando comando "${cmd}"...`);
   await setDoc(doc(db, 'lab', uid), { 
-    comando: cmd
+    comando: cmd,
+    userId: uid
   }, { merge: true });
 };
 

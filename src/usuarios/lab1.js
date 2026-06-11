@@ -1,4 +1,4 @@
-import './lab.css'; // Reutilizamos los estilos premium del lab existente
+import './lab/lab.css'; // Reutilizamos los estilos premium del lab existente
 import { getls } from '../widev.js';
 import { rtdb } from '../firebase.js';
 import { ref, onValue, set } from 'firebase/database';

@@ -2,8 +2,7 @@ import { getls, wiSmart } from './widev.js';
 import { rutas } from './rutas.js';
 import './todos/loginpc.js';
 import './estados.js';
-import './servicios/control.js';
-import './servicios/lab1.js';
+import './usuarios/servicios/servicios.js';
 
 
 // ── RUTAS PROFESIONAL DE ACUERDO A ROLES  ─────────────────────────────

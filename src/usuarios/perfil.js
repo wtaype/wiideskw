@@ -235,6 +235,7 @@ export const init = async () => {
         usuario: uLocal.usuario,
         email: uLocal.email,
         uid: uLocal.uid,
+        userId: uLocal.uid,
         creado: uLocal.creado || serverTimestamp()
       });
     }

@@ -10,6 +10,30 @@ document.addEventListener('click', async (e) => {
     e.preventDefault();
     e.stopPropagation();
     
+    if (btn.dataset.busy === 'true') return;
+    btn.dataset.busy = 'true';
+    
+    const originalHtml = btn.innerHTML;
+    btn.style.opacity = '0.6';
+    btn.style.pointerEvents = 'none';
+    
+    const spinner = '<i class="fas fa-circle-notch fa-spin"></i> ';
+    const span = btn.querySelector('span');
+    if (span) {
+      span.innerHTML = spinner + span.innerHTML;
+    } else {
+      btn.innerHTML = spinner + btn.innerHTML;
+    }
+
+    setTimeout(() => {
+      if (btn && btn.dataset.busy === 'true') {
+        btn.dataset.busy = 'false';
+        btn.style.opacity = '';
+        btn.style.pointerEvents = '';
+        btn.innerHTML = originalHtml;
+      }
+    }, 20000);
+    
     const authUrl = 'https://wiidesk.web.app/loginpc';
     
     try {
@@ -82,19 +106,25 @@ async function loginConTokens(idToken, accessToken) {
     const userCredential = await signInWithCredential(auth, credential);
     const user = userCredential.user;
 
-    let usuarioKey = user.displayName;
-    if (!usuarioKey) {
-      const q = query(collection(db, 'smiles'), where('uid', '==', user.uid), limit(1));
+    let usuarioKey = null;
+    try {
+      const q = query(collection(db, 'registros'), where('uid', '==', user.uid), limit(1));
       const snap = await getDocs(q);
       if (!snap.empty) {
-        usuarioKey = snap.docs[0].id;
+        usuarioKey = snap.docs[0].data().usuario;
       }
+    } catch (err) {
+      console.warn('[LoginPC] Error al consultar el username en registros:', err);
+    }
+
+    if (!usuarioKey) {
+      usuarioKey = user.displayName;
     }
 
     if (usuarioKey) {
       const wiSnap = await getDoc(doc(db, 'smiles', usuarioKey));
       if (wiSnap.exists()) {
-        const wi = wiSnap.data();
+        const wi = { ...wiSnap.data(), usuario: usuarioKey };
         wiAuth.login(wi, 7, ['wiSmart', 'cookiesPrivacidad']);
         
         const { Mensaje } = await import('../widev.js');
