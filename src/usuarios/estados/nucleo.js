@@ -10,7 +10,8 @@ export const getEstado = (clave) => clave ? _estado[clave] : { ..._estado };
 
 export const setEstado = (cambios) => {
   Object.assign(_estado, cambios);
-  _suscriptores.forEach(fn => fn({ ..._estado }));
+  const keys = Object.keys(cambios || {});
+  _suscriptores.forEach(fn => fn({ ..._estado }, keys));
 };
 
 export const suscribir = (fn) => {

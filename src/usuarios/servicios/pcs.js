@@ -23,6 +23,11 @@ export const registrarCodigoConexion = async (userId, idEquipo) => {
   try {
     const config = await invocarTauri('obtener_config');
     let idPc = config?.id_pc || '';
+    
+    const tienePin = !!(config?.seguridad?.pin_hash && config?.seguridad?.pin_salt);
+    const pinSalt = config?.seguridad?.pin_salt || '';
+    const pinHash = config?.seguridad?.pin_hash || '';
+    const dispositivoNombre = config?.dispositivo_nombre || 'PC';
 
     // 1. Si ya existe el código local, verificar disponibilidad en Firestore
     if (idPc) {
@@ -67,6 +72,10 @@ export const registrarCodigoConexion = async (userId, idEquipo) => {
       idPc,
       equipoId: idEquipo,
       userId,
+      nombre: dispositivoNombre,
+      conPin: tienePin,
+      pinSalt: pinSalt,
+      pinHash: pinHash,
       creado: serverTimestamp(),
     }, { merge: true });
 

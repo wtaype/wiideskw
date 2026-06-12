@@ -1,4 +1,4 @@
-// src/usuarios/movil2pc/header.js — Componente de visualización de cabecera y estado
+// src/usuarios/movil2pc/hero.js — Componente de visualización de cabecera y estado
 import { getEstado } from '../estados/estados.js';
 
 export const render = () => {

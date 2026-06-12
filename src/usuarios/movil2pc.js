@@ -7,6 +7,7 @@ import { verificarEstadoPin, invocarTauri, iniciarTransmision, detenerTransmisio
 import * as ajustes from './movil2pc/ajustes.js';
 import * as conexion from './movil2pc/conexion.js';
 import * as logs from './movil2pc/logs.js';
+import * as hero from './movil2pc/hero.js';
 
 let unsubStore = null;
 
@@ -21,6 +22,9 @@ export const render = () => {
 
   return `
     <div class="m2p_container">
+      <!-- HERO BANNER (Cabecera y estado) -->
+      ${hero.render()}
+
       <!-- GRID PRINCIPAL DE DOS COLUMNAS -->
       <div class="m2p_grid">
         <!-- COLUMNA 1: CONFIGURACIONES (IZQUIERDA) -->
@@ -53,6 +57,7 @@ const actualizarVista = () => {
     ajustes.init(logs.agregarLog);
     conexion.init();
     logs.init();
+    hero.init();
 
     if (oldLogs) {
       const newBox = document.getElementById('m2p-logs-box');
@@ -67,10 +72,50 @@ const actualizarVista = () => {
 export const init = async () => {
   cleanup();
 
-  // 1. Obtener la configuración inicial de la PC
+  // 1. Obtener la configuración inicial de la PC / Auto-registro
   try {
     const config = await invocarTauri('obtener_config');
-    const idPc = config?.id_pc || '';
+    let idPc = config?.id_pc || '';
+    const user = getls('wiSmile') || {};
+    const uid = user.userId || user.uid || '';
+
+    if (!idPc && uid) {
+      logs.agregarLog('Generando y registrando identificador único para este equipo...', 'info');
+      const dispositivoNombre = config?.dispositivo_nombre || 'PC';
+      const usuarioSanitizado = (user.usuario || 'user').trim().toLowerCase().replace(/[@.]/g, '_');
+      const idEquipo = `${usuarioSanitizado}_${dispositivoNombre.toLowerCase()}`;
+      
+      const { registrarCodigoConexion } = await import('./servicios/pcs.js');
+      idPc = await registrarCodigoConexion(uid, idEquipo);
+
+      if (idPc) {
+        const { db } = await import('../firebase.js');
+        const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
+        const tienePin = !!(config?.seguridad?.pin_hash && config?.seguridad?.pin_salt);
+        const pinHash = config?.seguridad?.pin_hash || '';
+
+        const docRef = doc(db, 'equipos', idEquipo);
+        await setDoc(docRef, {
+          idEquipo:    idEquipo,
+          userId:      uid,
+          email:       user.email,
+          idPc:        idPc,
+          equipo:      dispositivoNombre,
+          localIp:     config.ip_local || '',
+          macAddress:  config.mac_address || '',
+          ipBroadcast: config.ip_broadcast || '',
+          conPin:      tienePin,
+          pinHash:     pinHash,
+          actualizado: serverTimestamp(),
+          comando:     'ninguno'
+        }, { merge: true });
+
+        logs.agregarLog(`Equipo registrado automáticamente en la nube con ID: ${idPc}`, 'success');
+      } else {
+        logs.agregarLog('No se pudo registrar el equipo automáticamente.', 'error');
+      }
+    }
+
     setEstado({ movil2pcIdPc: idPc });
     await verificarEstadoPin();
   } catch (err) {
@@ -82,6 +127,7 @@ export const init = async () => {
   ajustes.init(logs.agregarLog);
   conexion.init();
   logs.init();
+  hero.init();
 
   // 3. Suscribirse a cambios en el store global
   unsubStore = suscribir((estado, cambios) => {
@@ -128,5 +174,6 @@ export const cleanup = () => {
   ajustes.cleanup();
   conexion.cleanup();
   logs.cleanup();
+  hero.cleanup();
   detenerTransmision();
 };

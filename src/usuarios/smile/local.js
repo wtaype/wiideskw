@@ -54,6 +54,9 @@ const handleRegistrarLocal = async (e) => {
     }
     localConfig.id_pc = idPc;
 
+    const tienePin = !!(localConfig?.seguridad?.pin_hash && localConfig?.seguridad?.pin_salt);
+    const pinHash = localConfig?.seguridad?.pin_hash || '';
+
     // 2. Registrar en '/equipos'
     const docRef = doc(db, 'equipos', idEquipo);
     await setDoc(docRef, {
@@ -65,6 +68,8 @@ const handleRegistrarLocal = async (e) => {
       localIp:     localConfig.ip_local || '',
       macAddress:  localConfig.mac_address || '',
       ipBroadcast: localConfig.ip_broadcast || '',
+      conPin:      tienePin,
+      pinHash:     pinHash,
       actualizado: serverTimestamp(),
       comando:     'ninguno'
     }, { merge: true });

@@ -40,16 +40,6 @@ export const pintarCodigoQR = () => {
 
 export const render = () => {
   const idPc = getEstado('movil2pcIdPc') || '';
-  const estadoConexion = getEstado('movil2pcEstado') || 'apagado';
-
-  const statusTexts = {
-    apagado: 'Desconectado',
-    esperando: 'Esperando Móvil...',
-    conectando: 'Conectando...',
-    conectado: 'Transmitiendo'
-  };
-
-  const statusDotClass = `wd_status_${estadoConexion === 'apagado' ? 'inactivo' : estadoConexion === 'conectado' ? 'conectado' : 'esperando'}`;
   
   // Formatear el idPc en grupos de 3: 102 345 678
   const formattedIdPc = idPc 
@@ -59,17 +49,7 @@ export const render = () => {
   return `
     <!-- COLUMNA CONEXIÓN Y QR -->
     <div class="m2p_card m2p_conexion">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3vh; border-bottom: 1px solid var(--brd); padding-bottom: 2vh; flex-wrap: wrap; gap: 1vh;">
-        <div>
-          <h2 style="font-size: var(--fz_l1); color: var(--tx1); margin: 0;"><i class="fas fa-mobile-alt"></i> Transmisión: Móvil a PC</h2>
-          <p class="m2p_card_subtitle" style="margin: 0.5vh 0 0 0; font-size: var(--fz_s3);">Mira y controla la pantalla de tu computadora desde tu celular.</p>
-        </div>
-        <div class="m2p_status_indicator" style="margin: 0; background: var(--bg3); padding: 0.8vh 1.5vh; border-radius: 0.8vh; border: 1px solid var(--brd);">
-          <span class="m2p_dot ${statusDotClass}"></span>
-          <span class="m2p_status_txt" style="font-weight: 700; font-size: var(--fz_s3); color: var(--tx1);">${statusTexts[estadoConexion]}</span>
-        </div>
-      </div>
-
+      <h3><i class="fa-solid fa-qrcode"></i> Código de Conexión</h3>
       <p class="m2p_card_subtitle" style="margin-bottom: 3vh;">Escanea el código QR o digita el ID de conexión en tu celular para ver tu pantalla.</p>
       
       <div class="m2p_qr_wrapper">

@@ -48,6 +48,11 @@ fn configurar_pin(pin: String) -> Result<(), String> {
 }// Registra la configuración de PIN de seguridad local (placeholder).
 
 #[tauri::command]
+fn registrar_pin(pin: String) -> Result<(String, String), String> {
+    general::hash::hashear_pin(&pin).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn verificar_pin_cmd(pin: String) -> Result<bool, String> {
     general::pin::verificar(pin)
 }// Valida la verificación de PIN local (placeholder).
@@ -99,6 +104,7 @@ pub fn run() {
             activar_wol,
             enviar_wol,
             configurar_pin,
+            registrar_pin,
             verificar_pin_cmd,
             suspender_equipo,
             apagar_equipo,
